@@ -23,6 +23,12 @@
 
 ---
 
+<p align="center">
+  <img src="docs/demo.gif" alt="Stitch Forge Demo" width="800">
+</p>
+
+---
+
 ## Que es esto
 
 Stitch Forge envuelve la API MCP de Google Stitch en un framework CLI que maneja el ciclo completo de diseño web generado por IA:
