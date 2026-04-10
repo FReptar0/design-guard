@@ -24,8 +24,10 @@
 ---
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Stitch Forge Demo" width="800">
+  <img src="docs/hero-banner.png" alt="Stitch Forge — Landing page generada con IA" width="800">
 </p>
+
+<p align="center"><em>Esta landing page fue generada por Stitch Forge en un solo prompt. <a href="docs/stitch-forge-landing.html">Ver el HTML</a>.</em></p>
 
 ---
 
