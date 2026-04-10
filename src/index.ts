@@ -7,7 +7,7 @@ const program = new Command();
 program
   .name('forge')
   .description('Stitch Forge — CLI framework for automating web design with Google Stitch')
-  .version('0.1.0');
+  .version('0.2.0');
 
 program
   .command('init')

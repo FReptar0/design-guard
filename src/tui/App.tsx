@@ -53,7 +53,7 @@ function App() {
         <Text bold color="cyan">
           ✦ Stitch Forge
         </Text>
-        <Text dimColor> v0.1.0</Text>
+        <Text dimColor> v0.2.0</Text>
       </Box>
 
       {view === 'menu' && (

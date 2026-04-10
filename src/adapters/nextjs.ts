@@ -15,7 +15,7 @@ export class NextjsAdapter implements FrameworkAdapter {
     mkdirSync(outputDir, { recursive: true });
     writeFileSync(packageJsonPath, JSON.stringify({
       name: 'stitch-forge-site',
-      version: '0.1.0',
+      version: '0.2.0',
       private: true,
       scripts: {
         dev: 'next dev',

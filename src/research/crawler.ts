@@ -28,7 +28,7 @@ export async function crawlSources(): Promise<CrawlResult[]> {
   for (const source of SOURCES) {
     try {
       const response = await fetch(source.url, {
-        headers: { 'User-Agent': 'StitchFramework/0.1.0' },
+        headers: { 'User-Agent': 'StitchFramework/0.2.0' },
         signal: AbortSignal.timeout(10000),
       });
 

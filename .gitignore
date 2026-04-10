@@ -7,3 +7,4 @@ screens/
 coverage/
 *.tgz
 .DS_Store
+.claude/worktrees/
