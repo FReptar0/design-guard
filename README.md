@@ -1,33 +1,144 @@
 # Stitch Forge
 
-CLI framework for automating web page design with [Google Stitch](https://stitch.withgoogle.com) via MCP.
+<p align="center">
+  <strong>Design websites with AI. Ship them with one command.</strong>
+</p>
+
+<p align="center">
+  <em>Stitch Forge turns Google Stitch into a full design-to-deploy pipeline.<br>
+  Generate screens, build design systems, and export to your favorite framework — all from the terminal.</em>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white" alt="Claude Code">
+  <img src="https://img.shields.io/badge/Google_Stitch-4285F4?style=flat&logo=google&logoColor=white" alt="Google Stitch">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/Ink-FF4154?style=flat&logo=react&logoColor=white" alt="Ink">
+  <img src="https://img.shields.io/badge/Vitest-6E9F18?style=flat&logo=vitest&logoColor=white" alt="Vitest">
+  <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT">
+</p>
+
+---
+
+## What Is This
+
+Stitch Forge wraps Google Stitch's MCP API into a CLI framework that handles the full lifecycle of AI-generated web design:
+
+- **Generate a design system** from a brand brief — colors, fonts, spacing, components
+- **Create screens** with guided prompts and built-in guardrails
+- **Preview instantly** in your browser or inline in Claude Code
+- **Build and export** to Static HTML, Astro, or Next.js
+- **Track quota** and stay within Stitch's monthly generation limits
+- **Auto-research** Stitch updates so your tooling never goes stale
+
+> **Built for Claude Code.** Stitch Forge ships with 6 slash commands that turn Claude into your design co-pilot. Generate a full website without leaving the conversation.
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **DESIGN.md Generator** | 8-section design system spec with strict validation (hex colors, rem sizes, component patterns) |
+| **Prompt Builder** | Zoom-out-zoom-in framework with guardrails: max length, single-screen, no vague requests |
+| **Multi-Framework Build** | Export to Static HTML, Astro (via Stitch MCP), or Next.js App Router |
+| **Live Preview** | Open screens in browser from CLI, TUI, or view inline via Claude Code |
+| **Interactive TUI** | Dashboard, prompt composer, and design editor — all in the terminal |
+| **Quota Tracking** | Visual meter for Flash (350/mo) and Pro (50/mo) generation limits |
+| **Auto-Research** | Crawls Stitch docs, blog, and forums — diffs against known state, updates knowledge base |
+| **Guided Workflows** | Step-by-step sequences for "redesign existing site" and "new app from scratch" |
+| **Claude Code Slash Commands** | `/forge-design`, `/forge-generate`, `/forge-build`, `/forge-preview`, `/forge-research`, `/forge-sync` |
 
 ## Quick Start
 
 ```bash
-# Install
-npm install
+# 1. Clone and install
+git clone https://github.com/FReptar0/stitch-forge.git
+cd stitch-forge && npm install
 
-# Setup
+# 2. Configure
 cp .env.example .env
 # Add your STITCH_API_KEY from stitch.withgoogle.com > Settings > API Key
 
-# Initialize project
+# 3. Initialize project
 npx tsx src/index.ts init
 
-# Generate a design system
+# 4. Create a design system
 npx tsx src/index.ts design "Acme Corp, SaaS platform, startups, modern minimal"
 
-# Launch TUI
-npx tsx src/index.ts tui
+# 5. Generate your first screen
+npx tsx src/index.ts generate "A landing page with hero, features grid, and CTA"
+
+# 6. Preview it
+npx tsx src/index.ts preview
+
+# 7. Build the site
+npx tsx src/index.ts build --framework static --auto
 ```
 
-## Claude Code Integration
+## How It Works
 
-Stitch Forge is designed to work with [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Add the MCP server config:
+```
+Brand brief or description
+│
+▼
+┌──────────────────┐
+│   DESIGN.md      │  8-section design system (colors, fonts, spacing, patterns)
+│   Generator      │
+└────────┬─────────┘
+         │
+┌────────▼─────────┐
+│  Prompt Builder   │  Guardrails: length, single-screen, specificity check
+│  + Stitch MCP     │  → generate_screen_from_text
+└────────┬─────────┘
+         │
+    ┌────┼────┐
+    ▼    ▼    ▼
+ Screen  Preview  Quota
+ .html   browser  tracker
+    │
+┌───▼──────────────┐
+│  Framework Build  │  --framework static | astro | nextjs
+└──────────────────┘
+         │
+    ┌────┼────┐
+    ▼    ▼    ▼
+  dist/  dist/  out/
+  HTML   Astro  Next.js
+```
+
+## Usage
+
+### CLI Commands
+
+```
+forge init                          Setup project, auth, and MCP config
+forge design "brief..."            Generate DESIGN.md from brand brief
+forge generate "description..."    Generate a screen via Stitch
+forge preview [screen-name]        Open screen in browser (--all for all)
+forge build --framework static     Build site (static | astro | nextjs)
+forge sync [project-id]            Pull screens from Stitch project
+forge research                     Check for Stitch API updates
+forge workflow [redesign|new-app]  Show guided step-by-step workflow
+forge quota                        Show generation quota usage
+forge tui                          Launch interactive terminal UI
+```
+
+### Claude Code Slash Commands
+
+```
+/forge-design     → Generate DESIGN.md from a brand brief
+/forge-generate   → Generate screens with guided prompts
+/forge-build      → Build and export to your chosen framework
+/forge-preview    → Preview screens inline (base64 image via MCP)
+/forge-research   → Check for Stitch updates
+/forge-sync       → Pull latest from a Stitch project
+```
+
+## MCP Setup
+
+Stitch Forge connects to Google Stitch via MCP. Add this to your `.mcp.json`:
 
 ```json
-// .mcp.json
 {
   "mcpServers": {
     "stitch": {
@@ -39,22 +150,50 @@ Stitch Forge is designed to work with [Claude Code](https://docs.anthropic.com/e
 }
 ```
 
-Then use slash commands:
-- `/forge-design` — Generate DESIGN.md from a brand brief
-- `/forge-generate` — Generate screens via Stitch
-- `/forge-build` — Build a deployable Astro site
-- `/forge-research` — Check for Stitch updates
-- `/forge-sync` — Pull screens from Stitch project
+> `forge init` creates this file automatically.
+
+## Project Structure
+
+```
+stitch-forge/
+├── src/
+│   ├── index.ts              # CLI entry (commander)
+│   ├── commands/             # init, design, generate, build, sync, research, preview, workflow
+│   ├── adapters/             # Framework adapters (static, astro, nextjs)
+│   ├── tui/                  # Ink terminal UI (Dashboard, PromptBuilder, DesignEditor)
+│   ├── mcp/                  # MCP client, tool builders, auth
+│   ├── research/             # Stitch update crawler, differ, updater
+│   ├── templates/            # DESIGN.md, prompt, and workflow templates
+│   └── utils/                # Config, logger, validators, quota, preview
+├── tests/                    # Unit + integration tests with fixtures
+├── .claude/commands/         # Claude Code slash commands
+├── docs/                     # Design guide, prompting guide, known state
+└── .github/workflows/        # CI (Node 20 + 22, typecheck + tests)
+```
 
 ## Development
 
 ```bash
-npm test          # Run tests
-npm run dev       # TUI dev mode
-npm run build     # Compile TypeScript
-npm run typecheck # Type check
+npm install           # Install dependencies
+npm run dev           # Launch TUI in dev mode
+npm test              # Run tests (watch mode)
+npm test -- --run     # Run tests once
+npm run typecheck     # Type-check without emitting
+npm run build         # Compile TypeScript to dist/
 ```
 
-## Architecture
+## Contributing
 
-See [CLAUDE.md](./CLAUDE.md) for full architecture documentation.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions and guidelines.
+
+## License
+
+[MIT](./LICENSE)
+
+## Author
+
+Built by [FReptar0](https://github.com/FReptar0).
+
+<p align="center">
+  <a href="https://github.com/FReptar0/stitch-forge"><img src="https://img.shields.io/badge/GitHub-000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+</p>
