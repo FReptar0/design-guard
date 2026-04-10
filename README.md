@@ -194,7 +194,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions and guidelines.
 
 ## Author
 
-Built by [Fernando Memije](https://fernandomemije.dev).
+Built by [Fernando Rodriguez Memije](https://fernandomemije.dev).
 
 <p align="center">
   <a href="https://fernandomemije.dev"><img src="https://img.shields.io/badge/fernandomemije.dev-000?style=for-the-badge&logo=safari&logoColor=white" alt="Website"></a>

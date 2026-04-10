@@ -44,7 +44,7 @@
     "node": ">=20.0.0"
   },
   "license": "MIT",
-  "author": "Fernando Memije <hi@fernandomemije.dev> (https://fernandomemije.dev)",
+  "author": "Fernando Rodriguez Memije <hi@fernandomemije.dev> (https://fernandomemije.dev)",
   "repository": {
     "type": "git",
     "url": "https://github.com/freptar0/stitch-forge.git"
