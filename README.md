@@ -192,8 +192,10 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions and guidelines.
 
 ## Author
 
-Built by [FReptar0](https://github.com/FReptar0).
+Built by [Fernando Memije](https://fernandomemije.dev).
 
 <p align="center">
-  <a href="https://github.com/FReptar0/stitch-forge"><img src="https://img.shields.io/badge/GitHub-000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+  <a href="https://fernandomemije.dev"><img src="https://img.shields.io/badge/fernandomemije.dev-000?style=for-the-badge&logo=safari&logoColor=white" alt="Website"></a>
+  <a href="https://github.com/FReptar0"><img src="https://img.shields.io/badge/GitHub-000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+  <a href="mailto:hi@fernandomemije.dev"><img src="https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Email"></a>
 </p>
