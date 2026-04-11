@@ -15,8 +15,12 @@ vi.stubGlobal('fetch', mockFetch);
 function mockResponse(data: unknown) {
   return {
     ok: true,
-    json: async () => ({ result: data }),
-    text: async () => JSON.stringify({ result: data }),
+    json: async () => ({
+      jsonrpc: '2.0',
+      id: 1,
+      result: { content: [{ type: 'text', text: JSON.stringify(data) }] },
+    }),
+    text: async () => JSON.stringify(data),
   };
 }
 
@@ -35,6 +39,7 @@ describe('StitchMcpClient', () => {
 
     expect(projects).toHaveLength(2);
     expect(projects[0].name).toBe('Acme Website');
+    expect(projects[0].id).toBe('proj-001');
     expect(mockFetch).toHaveBeenCalledOnce();
   });
 
