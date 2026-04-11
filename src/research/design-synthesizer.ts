@@ -508,11 +508,19 @@ export function synthesizeDosAndDonts(
     }
   }
 
-  // Deduplicate
-  const uniqueDos = [...new Set(dos)];
-  const uniqueDonts = [...new Set(donts)];
+  // Deduplicate — normalize to catch near-duplicates
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40);
+  const dedup = (arr: string[]): string[] => {
+    const seen = new Set<string>();
+    return arr.filter(item => {
+      const key = normalize(item);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
 
-  return { dos: uniqueDos, donts: uniqueDonts };
+  return { dos: dedup(dos), donts: dedup(donts) };
 }
 
 // ─── Markdown assembly ─────────────────────────────────────────────
@@ -546,7 +554,7 @@ function assembleDesignMd(
     );
   }
   themeLines.push(
-    `The visual identity balances ${research.marketPosition.personality} accessibility with ${brief.targetAudience} needs.`,
+    `The visual identity balances a ${research.marketPosition.personality} personality with the practical needs of ${brief.targetAudience}.`,
   );
   const themeText = themeLines.join(' ');
 

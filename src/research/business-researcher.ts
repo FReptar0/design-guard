@@ -96,17 +96,33 @@ export function extractPalette(html: string): ExtractedPalette {
   }
   colors.sort((a, b) => b.frequency - a.frequency);
 
-  // Determine dominant and accent
-  const backgroundColors = colors.filter((c) => c.context === 'background');
-  const nonBackgroundColors = colors.filter((c) => c.context !== 'background');
+  // Filter out structural colors — grays, blacks, whites used for layout, not brand identity
+  const isStructuralColor = (hex: string): boolean => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const maxDiff = Math.max(Math.abs(r - g), Math.abs(g - b), Math.abs(r - b));
+    // Any near-gray (R≈G≈B) is structural: text colors, borders, backgrounds
+    if (maxDiff < 20) return true;
+    // Pure white or near-white
+    if (r > 240 && g > 240 && b > 240) return true;
+    return false;
+  };
 
-  const dominantHex = backgroundColors.length > 0 ? backgroundColors[0].hex : '';
-  const accentHex =
-    nonBackgroundColors.length > 0
-      ? nonBackgroundColors[0].hex
-      : colors.length > 1
-        ? colors.find((c) => c.hex !== dominantHex)?.hex
-        : undefined;
+  const brandColors = colors.filter(c => !isStructuralColor(c.hex));
+  const brandBgColors = brandColors.filter(c => c.context === 'background');
+  const brandAccentColors = brandColors.filter(c => c.context !== 'background');
+
+  // Dominant = most frequent brand-colored background, or most frequent brand color overall
+  const dominantHex = brandBgColors.length > 0
+    ? brandBgColors[0].hex
+    : brandColors.length > 0
+      ? brandColors[0].hex
+      : colors.length > 0 ? colors[0].hex : '';
+
+  const accentHex = brandAccentColors.length > 0
+    ? brandAccentColors.find(c => c.hex !== dominantHex)?.hex
+    : brandColors.find(c => c.hex !== dominantHex)?.hex;
 
   return { colors, dominantHex, accentHex };
 }
@@ -127,6 +143,25 @@ const GENERIC_FONTS = new Set([
   'inherit',
   'initial',
   'unset',
+]);
+
+// Icon fonts that should never be used as heading/body fonts
+const ICON_FONTS = new Set([
+  'dashicons',
+  'material icons',
+  'material symbols outlined',
+  'material symbols rounded',
+  'fontawesome',
+  'font awesome',
+  'fa',
+  'glyphicons',
+  'icomoon',
+  'ionicons',
+  'feather',
+  'lucide',
+  'phosphor',
+  'heroicons',
+  'bootstrap-icons',
 ]);
 
 function cleanFontName(name: string): string {
@@ -181,7 +216,7 @@ export function extractTypography(html: string): ExtractedTypography {
     const families = fontFamilyMatch[1].split(',');
     for (const raw of families) {
       const cleaned = cleanFontName(raw);
-      if (cleaned && !GENERIC_FONTS.has(cleaned.toLowerCase())) {
+      if (cleaned && !GENERIC_FONTS.has(cleaned.toLowerCase()) && !ICON_FONTS.has(cleaned.toLowerCase())) {
         fontsSet.add(cleaned);
       }
     }
@@ -190,7 +225,7 @@ export function extractTypography(html: string): ExtractedTypography {
     const selector = block.selector.toLowerCase();
     const firstFont = families
       .map((f) => cleanFontName(f))
-      .find((f) => f && !GENERIC_FONTS.has(f.toLowerCase()));
+      .find((f) => f && !GENERIC_FONTS.has(f.toLowerCase()) && !ICON_FONTS.has(f.toLowerCase()));
 
     if (firstFont) {
       if (/\bh[1-3]\b/.test(selector) && !headingFont) {
