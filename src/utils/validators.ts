@@ -51,6 +51,10 @@ export function validatePrompt(prompt: string): { valid: boolean; errors: string
     /\band\s+a\s+\w+\s+page\b/i,
     /\bpage\s*1\b.*\bpage\s*2\b/is,
     /\bfirst screen\b.*\bsecond screen\b/is,
+    /\b(create|build|generate|make|design)\s+.*(,\s*\w+\s+page\s*){2,}/i,
+    /\b(landing|home|pricing|about|contact|dashboard|login|signup)\s+page\b.*\b(landing|home|pricing|about|contact|dashboard|login|signup)\s+page\b/is,
+    /\bmultiple\s+(pages?|screens?)\b/i,
+    /\b(two|three|four|five|2|3|4|5)\s+(pages?|screens?)\b/i,
   ];
   for (const pattern of multiScreenPatterns) {
     if (pattern.test(prompt)) {
@@ -64,10 +68,9 @@ export function validatePrompt(prompt: string): { valid: boolean; errors: string
 
   // Detect vague refinements
   const vaguePatterns = [
-    /^make it better$/i,
-    /^improve it$/i,
-    /^make it look nice$/i,
-    /^fix it$/i,
+    /^(just\s+)?(make|get)\s+it\s+(look\s+)?(better|nicer|good|pretty|nice|cool)\.?$/i,
+    /^(just\s+)?(improve|enhance|fix|update|change)\s+(it|this|the design|the page)\.?$/i,
+    /^(it\s+)?(looks?\s+)?(bad|ugly|wrong|off|weird)\.?\s*(fix\s+(it|this))?\.?$/i,
   ];
   for (const pattern of vaguePatterns) {
     if (pattern.test(prompt.trim())) {

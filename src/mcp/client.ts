@@ -60,29 +60,71 @@ export class StitchMcpClient {
   }
 
   private async callTool<T>(toolName: string, params: Record<string, unknown>): Promise<T> {
-    const response = await fetch(this.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Goog-Api-Key': this.apiKey,
-      },
-      body: JSON.stringify({
-        method: 'tools/call',
-        params: {
-          name: toolName,
-          arguments: params,
-        },
-      }),
-    });
+    const maxRetries = 3;
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Stitch MCP error (${response.status}): ${text}`);
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(this.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Goog-Api-Key': this.apiKey,
+          },
+          body: JSON.stringify({
+            method: 'tools/call',
+            params: { name: toolName, arguments: params },
+          }),
+          signal: AbortSignal.timeout(30000),
+        });
+
+        if (!response.ok) {
+          if (attempt < maxRetries && this.isRetryable(response.status)) {
+            const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+            await new Promise(r => setTimeout(r, delay));
+            continue;
+          }
+          throw new Error(this.formatError(response.status, await response.text()));
+        }
+
+        const data = await response.json() as { result: T };
+        return data.result;
+      } catch (error) {
+        if (error instanceof Error && error.name === 'TimeoutError') {
+          if (attempt < maxRetries) {
+            const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+            await new Promise(r => setTimeout(r, delay));
+            continue;
+          }
+          throw new Error('Stitch API request timed out after 30 seconds. Check your network connection.');
+        }
+        // Re-throw non-retryable errors (our own formatted messages)
+        if (error instanceof Error && error.message.startsWith('Stitch')) {
+          throw error;
+        }
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+        throw error;
+      }
     }
+    throw new Error('Stitch API: max retries exceeded');
+  }
 
-    const data = await response.json() as { result: T };
-    return data.result;
+  private isRetryable(status: number): boolean {
+    return [429, 500, 502, 503, 504].includes(status);
+  }
+
+  private formatError(status: number, body: string): string {
+    switch (status) {
+      case 400: return `Stitch API: Bad request. Check your parameters. (${body.slice(0, 200)})`;
+      case 401: return 'Stitch API: Invalid API key. Run `forge init` to reconfigure.';
+      case 403: return 'Stitch API: Access denied. Check your API key permissions.';
+      case 404: return 'Stitch API: Resource not found. The project or screen may have been deleted.';
+      default: return `Stitch API error (${status}): ${body.slice(0, 200)}`;
+    }
   }
 
   async listProjects(): Promise<StitchProject[]> {
