@@ -1,9 +1,10 @@
 ---
 name: forge-preview
 description: >
-  Preview generated Stitch screens. Shows screen images inline or opens
-  HTML files in the browser. Use when the user wants to see a screen
-  they generated.
+  Preview generated Stitch screens. Use when the user says "show me the
+  page", "what does it look like", or wants to see a screenshot of a
+  screen they generated. Displays screen images inline or opens HTML
+  files in the browser.
 ---
 
 Preview generated Stitch screens.

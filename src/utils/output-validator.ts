@@ -20,8 +20,19 @@ export function validateOutput(html: string): OutputValidationResult {
   const issues: ValidationIssue[] = [];
   const $ = load(html);
 
-  // 1. Check for AI slop font patterns
+  // 0. Check for empty or minimal HTML
+  const bodyText = $('body').text().trim();
+  if (!bodyText && $('body *').length === 0) {
+    issues.push({
+      type: 'error',
+      category: 'structure',
+      message: 'Generated HTML is empty — no content in body.',
+    });
+  }
+
+  // 1. Check for AI slop font patterns (both CSS and Tailwind classes)
   const allStyles = $('style').text() + ($('[style]').map((_i, el) => $(el).attr('style')).get().join(' '));
+  const allClasses = $('[class]').map((_i, el) => $(el).attr('class')).get().join(' ');
 
   if (/font-family[^;]*\bInter\b/i.test(allStyles) && !isIntentionalFont('Inter')) {
     issues.push({
@@ -36,6 +47,15 @@ export function validateOutput(html: string): OutputValidationResult {
       type: 'warning',
       category: 'slop',
       message: 'Detected "Poppins" font — common AI default. Consider a more distinctive typeface.',
+    });
+  }
+
+  // 1b. Check Tailwind font classes (font-sans resolves to Inter/system-ui)
+  if (/\bfont-sans\b/.test(allClasses) && !isIntentionalFont('Inter')) {
+    issues.push({
+      type: 'info',
+      category: 'slop',
+      message: 'Tailwind "font-sans" class detected — resolves to system sans-serif. Consider specifying a custom font.',
     });
   }
 

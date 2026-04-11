@@ -43,7 +43,13 @@ export async function runGenerate(description: string, opts: GenerateOptions): P
   }
 
   // Get project ID
-  const client = new StitchMcpClient();
+  let client: StitchMcpClient;
+  try {
+    client = new StitchMcpClient();
+  } catch (err) {
+    log.error(err instanceof Error ? err.message : 'Failed to initialize Stitch client.');
+    process.exit(1);
+  }
   let projectId = opts.project;
 
   if (!projectId) {

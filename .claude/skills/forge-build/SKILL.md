@@ -1,9 +1,9 @@
 ---
 name: forge-build
 description: >
-  Build a deployable site from generated Stitch screens. Maps screens to
-  routes and generates a static HTML, Astro, or Next.js project. Use after
-  screens have been generated and refined.
+  Build a deployable site from generated Stitch screens. Use when the user
+  wants to export, ship, publish, or turn their screens into a real website.
+  Maps screens to routes and generates a static HTML, Astro, or Next.js project.
 ---
 
 Build a deployable site from Stitch screens using a selected framework.

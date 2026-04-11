@@ -2,9 +2,10 @@
 name: forge-generate
 description: >
   Generate a screen in Google Stitch from a text description. Use when
-  the user wants to create a new web page design (landing page, dashboard,
-  pricing, about, etc.). Builds structured prompts, validates guardrails,
-  checks quota, and sends to Stitch MCP. Requires DESIGN.md for consistency.
+  the user wants to create a new web page, landing page, dashboard,
+  pricing page, about page, or any UI design. Also use when the user
+  says "design a page", "create a screen", or "build a webpage".
+  Uses DESIGN.md if available for visual consistency.
 ---
 
 Generate a screen in Google Stitch from a description.
@@ -18,6 +19,7 @@ Before sending any prompt to Stitch:
 4. Reject vague requests ("make it better", "improve it") — ask for specifics
 5. Check quota before generating: read `.forgerc.json` to see current usage
 6. If DESIGN.md exists, reference it for visual consistency
+7. Flag generic terms ("modern", "clean", "professional") and suggest specific UI/UX vocabulary replacements (e.g., "asymmetric hero layout", "bento grid", "sticky nav with CTA")
 
 ## Instructions
 
@@ -66,6 +68,10 @@ Before sending any prompt to Stitch:
 8. If generating multiple screens for a project, prefix subsequent prompts with:
    "Following the same design language as the homepage..."
 
-9. **Next step**: Suggest "Preview with `/forge-preview` or generate another screen with `/forge-generate`"
+9. For **variants**, offer to call `mcp__stitch__generate_variants` to produce 2-3 alternative designs the user can compare before committing to one direction.
+
+10. For **inline edits** to an existing screen, use `mcp__stitch__edit_screens` instead of regenerating from scratch.
+
+11. **Next step**: Suggest "Preview with `/forge-preview` or generate another screen with `/forge-generate`"
 
 Reference: See `docs/prompting-guide.md` for examples and strategies.

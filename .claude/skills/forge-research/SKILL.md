@@ -2,9 +2,9 @@
 name: forge-research
 description: >
   Check for Google Stitch updates and refresh the local knowledge base.
-  Searches official docs, blogs, and forums for changes to models, tools,
-  quotas, or features. Use periodically or when the user asks about
-  Stitch capabilities.
+  Use when the user asks "what's new with Stitch", "are there any updates",
+  or wants to know about current Stitch capabilities, models, or quotas.
+  Searches official docs, blogs, and forums.
 ---
 
 Check for Google Stitch updates and refresh the local knowledge base.

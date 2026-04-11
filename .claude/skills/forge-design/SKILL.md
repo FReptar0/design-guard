@@ -1,10 +1,11 @@
 ---
 name: forge-design
 description: >
-  Generate a DESIGN.md from a brand brief. Use when creating or updating
-  the design system for a web project. Asks for company name, industry,
-  target audience, and aesthetic direction. Outputs an 8-section design
-  specification with colors (hex), typography, spacing, and anti-slop rules.
+  Generate a DESIGN.md from a brand brief. Use when the user wants to
+  create a visual identity, design system, or brand style guide for a
+  web project. Also use when starting a new website from scratch. Asks
+  for company name, industry, target audience, and aesthetic direction.
+  Outputs an 8-section design spec with colors, typography, and anti-slop rules.
 ---
 
 Generate a complete DESIGN.md for a web project using Google Stitch.
@@ -53,7 +54,10 @@ Generate a complete DESIGN.md for a web project using Google Stitch.
 
 5. Write the file to `DESIGN.md` at the project root.
 
-6. After writing, check if a Stitch design system exists using `mcp__stitch__list_design_systems`. If the user has a Stitch project, offer to create or update the design system with `mcp__stitch__create_design_system` or `mcp__stitch__update_design_system`.
+6. After writing, check if a Stitch design system exists using `mcp__stitch__list_design_systems`. If the user has a Stitch project:
+   - Offer to create a design system with `mcp__stitch__create_design_system`
+   - Or update an existing one with `mcp__stitch__update_design_system`
+   - Apply it to the project with `mcp__stitch__apply_design_system` so all future generations respect it
 
 7. **Next step**: Suggest running `/forge-generate` to create the first screen using the new design system.
 
