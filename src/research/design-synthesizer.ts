@@ -6,6 +6,7 @@
  */
 
 import type {
+  BusinessModelContext,
   BusinessResearchResult,
   CompetitorAnalysis,
   SynthesizedDesign,
@@ -508,6 +509,41 @@ export function synthesizeDosAndDonts(
     }
   }
 
+  // Business-model-aware rules
+  const bm = research.businessModel;
+  if (bm) {
+    if (bm.type === 'physical-retail') {
+      dos.push('Make store locator or "find nearest store" the primary CTA on every page');
+      dos.push('Show weekly deals as a browsable flyer, not as a shopping interface');
+      dos.push('Include store hours and location information prominently');
+      dos.push('Feature the store count and geographic reach as social proof');
+      donts.push("Don't add a shopping cart, checkout flow, or 'add to cart' buttons — this is not an e-commerce site");
+      donts.push("Don't show product detail pages with purchase options");
+      donts.push("Don't use e-commerce patterns (product grid with buy buttons, wishlists, user accounts)");
+    }
+
+    if (bm.type === 'e-commerce') {
+      dos.push('Make product search and category navigation the primary interaction');
+      dos.push('Show product images, prices, and add-to-cart buttons on product cards');
+      dos.push('Include trust badges, shipping info, and return policy prominently');
+      donts.push("Don't hide the shopping cart or make checkout multi-step without progress indicator");
+    }
+
+    if (bm.type === 'saas') {
+      dos.push('Show the product in action with realistic screenshots or demo');
+      dos.push('Make pricing and plan comparison easily accessible');
+      dos.push('Include a prominent free trial or demo CTA above the fold');
+      donts.push("Don't use generic feature lists without showing the actual product");
+      donts.push("Don't hide pricing behind a 'contact sales' wall unless enterprise-only");
+    }
+
+    if (bm.type === 'service') {
+      dos.push('Make booking or contact form the primary CTA');
+      dos.push('Show team credentials, certifications, and client testimonials');
+      donts.push("Don't hide contact information behind multiple clicks");
+    }
+  }
+
   // Deduplicate — normalize to catch near-duplicates
   const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40);
   const dedup = (arr: string[]): string[] => {
@@ -556,7 +592,26 @@ function assembleDesignMd(
   themeLines.push(
     `The visual identity balances a ${research.marketPosition.personality} personality with the practical needs of ${brief.targetAudience}.`,
   );
-  const themeText = themeLines.join(' ');
+
+  // Add business model context when confidence is sufficient
+  const bm = research.businessModel;
+  if (bm && bm.confidence >= 40) {
+    themeLines.push('');
+    themeLines.push(`**Business Model**: ${bm.type.replace('-', ' ')} — ${bm.primaryRevenue}.`);
+    themeLines.push(`**Website Purpose**: ${bm.websitePurpose}`);
+    if (bm.primaryUserGoals.length > 0) {
+      themeLines.push('**Primary User Goals**:');
+      bm.primaryUserGoals.forEach((g, i) => themeLines.push(`${i + 1}. ${g}`));
+    }
+    if (bm.keyFeatures.length > 0) {
+      themeLines.push(`**Key Page Elements**: ${bm.keyFeatures.join(', ')}.`);
+    }
+    if (bm.notFeatures.length > 0) {
+      themeLines.push(`**Avoid on this site**: ${bm.notFeatures.join(', ')}.`);
+    }
+  }
+
+  const themeText = themeLines.join('\n');
 
   // Section 2: Color table
   const accentRow = palette.accent
@@ -655,9 +710,25 @@ ${dosAndDonts.donts.map((d) => `- ${d}`).join('\n')}
  *
  * Falls back to the static template generator when research confidence is < 30.
  */
+const DEFAULT_BUSINESS_MODEL: BusinessModelContext = {
+  type: 'other',
+  primaryRevenue: 'Unknown',
+  websitePurpose: 'Inform visitors about the organization.',
+  primaryUserGoals: ['Learn about the organization'],
+  keyFeatures: [],
+  notFeatures: [],
+  differentiators: [],
+  confidence: 0,
+};
+
 export function synthesizeDesign(
   research: BusinessResearchResult,
 ): SynthesizedDesign {
+  // Ensure businessModel is always present (fallback for legacy callers)
+  if (!research.businessModel) {
+    research = { ...research, businessModel: DEFAULT_BUSINESS_MODEL };
+  }
+
   const sources: string[] = [];
 
   // Low confidence: fall back to static template

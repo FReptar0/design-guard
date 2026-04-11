@@ -246,6 +246,151 @@ describe('business researcher', () => {
     });
   });
 
+  describe('inferBusinessModel', () => {
+    it('detects physical retail from nav items', async () => {
+      const { inferBusinessModel } = await import('../../src/research/business-researcher.js');
+      const result = inferBusinessModel(
+        { companyName: 'Test', industry: 'tiendas de abarrotes', targetAudience: 'familias', aesthetic: 'warm' },
+        {
+          url: 'https://test.com',
+          palette: { colors: [], dominantHex: '' },
+          typography: { fonts: [] },
+          layoutPatterns: [],
+          contentTone: 'warm',
+          navItems: ['Inicio', 'Productos', 'Sucursales', 'Nosotros', 'Contacto'],
+          ctaTexts: ['Encuentra tu tienda'],
+          fetchedAt: new Date().toISOString(),
+        },
+      );
+      expect(result.type).toBe('physical-retail');
+      expect(result.websitePurpose).toContain('foot traffic');
+      expect(result.notFeatures).toContain('Shopping cart');
+      expect(result.primaryUserGoals.some(g => g.toLowerCase().includes('store') || g.toLowerCase().includes('tienda'))).toBe(true);
+    });
+
+    it('detects e-commerce from cart signals', async () => {
+      const { inferBusinessModel } = await import('../../src/research/business-researcher.js');
+      const result = inferBusinessModel(
+        { companyName: 'Shop', industry: 'online retail', targetAudience: 'shoppers', aesthetic: 'modern' },
+        {
+          url: 'https://shop.com',
+          palette: { colors: [], dominantHex: '' },
+          typography: { fonts: [] },
+          layoutPatterns: [],
+          contentTone: 'neutral',
+          navItems: ['Home', 'Shop', 'Cart', 'Account', 'Checkout'],
+          ctaTexts: ['Add to Cart', 'Buy Now'],
+          fetchedAt: new Date().toISOString(),
+        },
+      );
+      expect(result.type).toBe('e-commerce');
+      expect(result.keyFeatures).toContain('Shopping cart');
+    });
+
+    it('detects SaaS from dashboard/API signals', async () => {
+      const { inferBusinessModel } = await import('../../src/research/business-researcher.js');
+      const result = inferBusinessModel(
+        { companyName: 'AppCo', industry: 'SaaS platform', targetAudience: 'developers', aesthetic: 'minimal' },
+        {
+          url: 'https://appco.com',
+          palette: { colors: [], dominantHex: '' },
+          typography: { fonts: [] },
+          layoutPatterns: [],
+          contentTone: 'technical',
+          navItems: ['Product', 'Pricing', 'Docs', 'Login', 'API'],
+          ctaTexts: ['Start Free Trial'],
+          fetchedAt: new Date().toISOString(),
+        },
+      );
+      expect(result.type).toBe('saas');
+      expect(result.keyFeatures.some(f => f.toLowerCase().includes('trial') || f.toLowerCase().includes('demo'))).toBe(true);
+    });
+
+    it('detects physical retail from industry keywords alone when no site', async () => {
+      const { inferBusinessModel } = await import('../../src/research/business-researcher.js');
+      const result = inferBusinessModel(
+        { companyName: '3B', industry: 'hard-discount retail grocery chain', targetAudience: 'Mexican families', aesthetic: 'warm' },
+      );
+      expect(result.type).toBe('physical-retail');
+      expect(result.confidence).toBeLessThan(60); // lower confidence without site data
+    });
+
+    it('defaults to other for unknown business', async () => {
+      const { inferBusinessModel } = await import('../../src/research/business-researcher.js');
+      const result = inferBusinessModel(
+        { companyName: 'Unknown', industry: 'misc', targetAudience: 'everyone', aesthetic: 'clean' },
+      );
+      expect(result.type).toBe('other');
+      expect(result.confidence).toBeLessThan(30);
+    });
+
+    it('detects service business from appointment signals', async () => {
+      const { inferBusinessModel } = await import('../../src/research/business-researcher.js');
+      const result = inferBusinessModel(
+        { companyName: 'Dr. Smith', industry: 'dental clinic', targetAudience: 'patients', aesthetic: 'clean' },
+        {
+          url: 'https://drsmith.com',
+          palette: { colors: [], dominantHex: '' },
+          typography: { fonts: [] },
+          layoutPatterns: [],
+          contentTone: 'warm',
+          navItems: ['Home', 'Services', 'About', 'Contact'],
+          ctaTexts: ['Book Appointment', 'Schedule Consultation'],
+          fetchedAt: new Date().toISOString(),
+        },
+      );
+      expect(result.type).toBe('service');
+      expect(result.keyFeatures.some(f => f.toLowerCase().includes('booking'))).toBe(true);
+      expect(result.notFeatures).toContain('Shopping cart');
+    });
+
+    it('extracts differentiators with numbers from site content', async () => {
+      const { inferBusinessModel } = await import('../../src/research/business-researcher.js');
+      const result = inferBusinessModel(
+        { companyName: '3B', industry: 'retail grocery', targetAudience: 'families', aesthetic: 'warm' },
+        {
+          url: 'https://tiendas3b.com',
+          palette: { colors: [], dominantHex: '' },
+          typography: { fonts: [] },
+          layoutPatterns: [],
+          contentTone: 'warm',
+          navItems: ['Inicio', 'Sucursales', '3,300+ tiendas', 'Contacto'],
+          ctaTexts: ['Encuentra tu tienda'],
+          fetchedAt: new Date().toISOString(),
+        },
+      );
+      expect(result.type).toBe('physical-retail');
+      expect(result.differentiators.some(d => d.includes('3,300+'))).toBe(true);
+    });
+
+    it('prefers site signals over industry keywords when they conflict', async () => {
+      const { inferBusinessModel } = await import('../../src/research/business-researcher.js');
+      // Industry says "store" but site has cart/checkout signals
+      const result = inferBusinessModel(
+        { companyName: 'RetailCo', industry: 'retail store', targetAudience: 'shoppers', aesthetic: 'modern' },
+        {
+          url: 'https://retailco.com',
+          palette: { colors: [], dominantHex: '' },
+          typography: { fonts: [] },
+          layoutPatterns: [],
+          contentTone: 'neutral',
+          navItems: ['Home', 'Shop', 'Cart', 'Checkout'],
+          ctaTexts: ['Add to Cart'],
+          fetchedAt: new Date().toISOString(),
+        },
+      );
+      expect(result.type).toBe('e-commerce');
+    });
+
+    it('detects marketplace from keywords', async () => {
+      const { inferBusinessModel } = await import('../../src/research/business-researcher.js');
+      const result = inferBusinessModel(
+        { companyName: 'TradeHub', industry: 'online marketplace', targetAudience: 'buyers and sellers', aesthetic: 'modern' },
+      );
+      expect(result.type).toBe('marketplace');
+    });
+  });
+
   describe('analyzeSite', () => {
     it('returns null on fetch failure', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
@@ -276,6 +421,30 @@ describe('business researcher', () => {
       expect(result!.navItems).toContain('Products');
       expect(result!.layoutPatterns).toContain('hero-banner');
     });
+
+    it('extracts CTA texts from buttons', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () => '<html><body><nav><a>Home</a></nav><button>Buy Now</button><a class="btn">Sign Up</a><div role="button">Learn More</div></body></html>',
+      });
+      const { analyzeSite } = await import('../../src/research/business-researcher.js');
+      const result = await analyzeSite('https://example.com');
+      expect(result).not.toBeNull();
+      expect(result!.ctaTexts).toContain('Buy Now');
+      expect(result!.ctaTexts).toContain('Sign Up');
+      expect(result!.ctaTexts).toContain('Learn More');
+    });
+
+    it('returns empty ctaTexts array when no CTAs found', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: async () => '<html><body><p>Just text</p></body></html>',
+      });
+      const { analyzeSite } = await import('../../src/research/business-researcher.js');
+      const result = await analyzeSite('https://example.com');
+      expect(result).not.toBeNull();
+      expect(result!.ctaTexts).toEqual([]);
+    });
   });
 
   describe('researchBusiness', () => {
@@ -290,6 +459,19 @@ describe('business researcher', () => {
       expect(result.confidence).toBeGreaterThanOrEqual(10);
       expect(result.audienceInsights.trustSignals.length).toBeGreaterThan(0);
       expect(result.fallbacksUsed).toContain('current_site_unavailable');
+    });
+
+    it('includes businessModel in result', async () => {
+      const { researchBusiness } = await import('../../src/research/business-researcher.js');
+      const result = await researchBusiness({
+        companyName: '3B',
+        industry: 'hard-discount retail grocery chain',
+        targetAudience: 'Mexican families',
+        aesthetic: 'warm',
+      });
+      expect(result.businessModel).toBeDefined();
+      expect(result.businessModel.type).toBe('physical-retail');
+      expect(result.businessModel.notFeatures).toContain('Shopping cart');
     });
 
     it('increases confidence when site analysis succeeds', async () => {

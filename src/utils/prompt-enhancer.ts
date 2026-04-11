@@ -5,6 +5,7 @@ export interface EnhancementResult {
   enhanced: string;
   suggestions: string[];
   slopRiskScore: number;
+  businessAlignmentIssues: string[];
 }
 
 /**
@@ -54,7 +55,41 @@ export function enhancePrompt(prompt: string): EnhancementResult {
     suggestions.push('Describe specific sections for more targeted generation.');
   }
 
-  return { original: prompt, enhanced, suggestions, slopRiskScore };
+  // 5. Business alignment check
+  const businessAlignmentIssues: string[] = [];
+  if (existsSync('DESIGN.md')) {
+    const designContent = readFileSync('DESIGN.md', 'utf-8').toLowerCase();
+
+    // If DESIGN.md says NOT e-commerce, check for e-commerce terms in prompt
+    if (designContent.includes('not an e-commerce') || designContent.includes('not e-commerce') || designContent.includes('no online purchasing')) {
+      const ecommerceTerms = prompt.match(/\b(shopping cart|add to cart|checkout|buy now|purchase|order online|e-commerce|ecommerce|shop now)\b/gi);
+      if (ecommerceTerms) {
+        businessAlignmentIssues.push(
+          `Prompt contains e-commerce terms (${ecommerceTerms.join(', ')}) but DESIGN.md specifies this is NOT an e-commerce site. Remove these elements.`
+        );
+      }
+    }
+
+    // If DESIGN.md mentions store locator as key, check prompt includes it
+    if (designContent.includes('store locator') || designContent.includes('find nearest store')) {
+      if (!/\b(store|tienda|sucursal|location|ubicaci|locali|find|nearest|cerca)\b/i.test(prompt)) {
+        businessAlignmentIssues.push(
+          'DESIGN.md specifies store locator as a key element. Consider including a store finder section in this page.'
+        );
+      }
+    }
+
+    // If DESIGN.md mentions booking/contact as primary
+    if (designContent.includes('booking') || designContent.includes('appointment') || designContent.includes('contact form')) {
+      if (!/\b(book|contact|form|appointment|schedule|cita|agendar)\b/i.test(prompt)) {
+        businessAlignmentIssues.push(
+          'DESIGN.md specifies booking/contact as a primary feature. Consider including a contact or booking section.'
+        );
+      }
+    }
+  }
+
+  return { original: prompt, enhanced, suggestions, slopRiskScore, businessAlignmentIssues };
 }
 
 /**

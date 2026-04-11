@@ -42,6 +42,7 @@ export interface SiteAnalysis {
   layoutPatterns: string[];
   contentTone: 'formal' | 'casual' | 'technical' | 'warm' | 'neutral';
   navItems: string[];
+  ctaTexts: string[];
   fetchedAt: string;
 }
 
@@ -72,10 +73,24 @@ export interface MarketPosition {
   personality: 'traditional' | 'modern' | 'innovative' | 'disruptive';
 }
 
+// ─── Business Model ─────────────────────────────────────────────────
+
+export interface BusinessModelContext {
+  type: 'physical-retail' | 'e-commerce' | 'saas' | 'marketplace' | 'service' | 'media' | 'nonprofit' | 'other';
+  primaryRevenue: string;
+  websitePurpose: string;
+  primaryUserGoals: string[];
+  keyFeatures: string[];
+  notFeatures: string[];
+  differentiators: string[];
+  confidence: number; // 0-100
+}
+
 // ─── Research Result ────────────────────────────────────────────────
 
 export interface BusinessResearchResult {
   brief: BusinessBrief;
+  businessModel: BusinessModelContext;
   currentSite?: SiteAnalysis;
   competitors: CompetitorAnalysis[];
   audienceInsights: AudienceInsight;

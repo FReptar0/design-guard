@@ -126,6 +126,35 @@ export function validateOutput(html: string): OutputValidationResult {
     }
   }
 
+  // 7. Check business model alignment (if DESIGN.md has business context)
+  if (existsSync('DESIGN.md')) {
+    const designContent = readFileSync('DESIGN.md', 'utf-8').toLowerCase();
+
+    // If NOT e-commerce, check for cart/checkout in generated HTML
+    if (designContent.includes('not an e-commerce') || designContent.includes('not e-commerce') || designContent.includes('no online purchasing')) {
+      const htmlLower = html.toLowerCase();
+      if (/\b(add.?to.?cart|shopping.?cart|checkout|buy.?now|carrito)\b/i.test(htmlLower)) {
+        issues.push({
+          type: 'error',
+          category: 'structure',
+          message: 'Generated HTML contains e-commerce elements (cart/checkout) but DESIGN.md specifies this is NOT an e-commerce site.',
+        });
+      }
+    }
+
+    // If store locator is key, check for location-related elements
+    if (designContent.includes('store locator') || designContent.includes('find nearest store')) {
+      const hasLocationElements = /\b(location|store.?finder|find.?store|sucursal|ubicaci|postal|zip.?code|mapa|map)\b/i.test(html.toLowerCase());
+      if (!hasLocationElements) {
+        issues.push({
+          type: 'info',
+          category: 'structure',
+          message: 'DESIGN.md specifies store locator as key feature but no location/finder elements detected in output.',
+        });
+      }
+    }
+  }
+
   // Calculate score
   const errorCount = issues.filter(i => i.type === 'error').length;
   const warningCount = issues.filter(i => i.type === 'warning').length;

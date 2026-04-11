@@ -1,6 +1,7 @@
 import { load } from 'cheerio';
 import type {
   BusinessBrief,
+  BusinessModelContext,
   SiteAnalysis,
   ExtractedPalette,
   ExtractedTypography,
@@ -577,6 +578,247 @@ export function inferMarketPosition(
   return { pricePoint, reach, personality };
 }
 
+// ─── Business Model Inference ─────────────────────────────────────
+
+// Signal patterns for detecting business model from site content
+const PHYSICAL_RETAIL_SIGNALS = /\b(sucursal|tienda|ubicaci|locali|horario|store|location|find.?us|visit|nearest)\b/i;
+const ECOMMERCE_SIGNALS = /\b(carrito|cart|checkout|comprar|buy|shop|add.?to.?cart|wishlist|order)\b/i;
+const SAAS_SIGNALS = /\b(login|sign.?up|dashboard|api|pricing|plan|trial|demo|docs|documentation)\b/i;
+const SERVICE_SIGNALS = /\b(contact|agendar|book|cita|appointment|schedule|consult|quote)\b/i;
+
+/**
+ * Infer what kind of business this is and what the website should (and should NOT) do.
+ *
+ * Uses a combination of site navigation signals, CTA text, layout patterns, and
+ * industry keywords from the brief to determine the business model. This prevents
+ * generating e-commerce pages for physical-only retailers, or store locators for SaaS products.
+ */
+export function inferBusinessModel(
+  brief: BusinessBrief,
+  siteAnalysis?: SiteAnalysis | null,
+): BusinessModelContext {
+  const hasSite = siteAnalysis != null;
+
+  // Combine all text signals from the site
+  const navText = hasSite ? siteAnalysis.navItems.join(' ') : '';
+  const ctaText = hasSite ? siteAnalysis.ctaTexts.join(' ') : '';
+  const allSiteText = `${navText} ${ctaText}`;
+
+  // Step 1: Detect signals from site content
+  const hasPhysicalRetailSignals = PHYSICAL_RETAIL_SIGNALS.test(allSiteText);
+  const hasEcommerceSignals = ECOMMERCE_SIGNALS.test(allSiteText);
+  const hasSaasSignals = SAAS_SIGNALS.test(allSiteText);
+  const hasServiceSignals = SERVICE_SIGNALS.test(allSiteText);
+
+  // Check layout patterns for additional hints
+  const hasCardGridWithoutEcommerce = hasSite &&
+    siteAnalysis.layoutPatterns.includes('card-grid') &&
+    !hasEcommerceSignals;
+
+  // Step 2: Detect from industry keywords in brief
+  const industry = brief.industry.toLowerCase();
+  const audience = brief.targetAudience.toLowerCase();
+  const briefText = `${industry} ${audience}`;
+
+  let type: BusinessModelContext['type'] = 'other';
+
+  // Site signals take priority when available
+  if (hasSite) {
+    if (hasEcommerceSignals && !hasPhysicalRetailSignals) {
+      type = 'e-commerce';
+    } else if (hasPhysicalRetailSignals && !hasEcommerceSignals) {
+      type = 'physical-retail';
+    } else if (hasSaasSignals && !hasPhysicalRetailSignals && !hasEcommerceSignals) {
+      type = 'saas';
+    } else if (hasServiceSignals && !hasEcommerceSignals && !hasSaasSignals) {
+      type = 'service';
+    } else if (hasCardGridWithoutEcommerce && /\b(retail|grocery|tienda|store|supermercado|despensa|mercado)\b/.test(briefText)) {
+      // Card grid without e-commerce signals + retail industry = likely physical retail catalog
+      type = 'physical-retail';
+    }
+  }
+
+  // Fall back to industry keywords if site didn't determine the type
+  if (type === 'other') {
+    if (/\b(tienda|store|retail|grocery|supermercado|despensa|discount|mercado)\b/.test(briefText)) {
+      // Check if e-commerce signals contradict physical retail
+      if (hasEcommerceSignals) {
+        type = 'e-commerce';
+      } else {
+        type = 'physical-retail';
+      }
+    } else if (/\b(saas|software|platform|app\b|cloud)\b/.test(briefText)) {
+      type = 'saas';
+    } else if (/\b(marketplace|market.?place)\b/.test(briefText)) {
+      type = 'marketplace';
+    } else if (/\b(agency|consulting|lawyer|doctor|dentist|clinic|salon|service|freelance)\b/.test(briefText)) {
+      type = 'service';
+    } else if (/\b(blog|news|media|magazine|publication|journal)\b/.test(briefText)) {
+      type = 'media';
+    } else if (/\b(nonprofit|non-profit|ngo|charity|foundation)\b/.test(briefText)) {
+      type = 'nonprofit';
+    }
+  }
+
+  // Step 3: Build the full context based on detected type
+  const result = buildModelContext(type, hasSite);
+
+  // Step 4: Extract differentiators from site content
+  if (hasSite) {
+    const allItems = [...siteAnalysis.navItems, ...siteAnalysis.ctaTexts];
+    for (const item of allItems) {
+      // Look for text containing numbers (e.g., "3,300+ tiendas", "50 estados")
+      if (/\d[\d,]*\+?\s*\w+/.test(item) && item.length < 80) {
+        result.differentiators.push(item.trim());
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Build a complete BusinessModelContext for a given business type.
+ */
+function buildModelContext(
+  type: BusinessModelContext['type'],
+  hasSiteData: boolean,
+): BusinessModelContext {
+  switch (type) {
+    case 'physical-retail':
+      return {
+        type: 'physical-retail',
+        primaryRevenue: 'Physical store sales',
+        websitePurpose: 'Drive foot traffic to nearest store location. Inform about deals and product availability.',
+        primaryUserGoals: [
+          'Find the nearest store location',
+          'Check current deals and prices',
+          'Browse available product categories',
+          'Get store hours and contact information',
+        ],
+        keyFeatures: ['Store locator', 'Weekly deals/flyer', 'Product category browse', 'Store hours', 'Brand information'],
+        notFeatures: ['Shopping cart', 'Online checkout', 'Add to cart buttons', 'User accounts', 'Wishlist', 'Online payment'],
+        differentiators: [],
+        confidence: hasSiteData ? 80 : 50,
+      };
+
+    case 'e-commerce':
+      return {
+        type: 'e-commerce',
+        primaryRevenue: 'Online product sales',
+        websitePurpose: 'Sell products directly to customers online.',
+        primaryUserGoals: [
+          'Browse and search products',
+          'Compare prices and options',
+          'Add items to cart and checkout',
+          'Track orders and manage account',
+        ],
+        keyFeatures: ['Product catalog', 'Shopping cart', 'Checkout', 'User accounts', 'Order tracking', 'Search'],
+        notFeatures: [],
+        differentiators: [],
+        confidence: hasSiteData ? 80 : 50,
+      };
+
+    case 'saas':
+      return {
+        type: 'saas',
+        primaryRevenue: 'Software subscriptions',
+        websitePurpose: 'Convert visitors into trial/paid users.',
+        primaryUserGoals: [
+          'Understand what the product does',
+          'See pricing and compare plans',
+          'Start a free trial or demo',
+          'Access documentation',
+        ],
+        keyFeatures: ['Product demo/screenshots', 'Pricing tiers', 'Free trial CTA', 'Documentation', 'Customer testimonials'],
+        notFeatures: ['Physical store locator', 'Inventory browsing'],
+        differentiators: [],
+        confidence: hasSiteData ? 80 : 50,
+      };
+
+    case 'marketplace':
+      return {
+        type: 'marketplace',
+        primaryRevenue: 'Transaction fees or commissions',
+        websitePurpose: 'Connect buyers and sellers on a shared platform.',
+        primaryUserGoals: [
+          'Browse listings from multiple sellers',
+          'Compare options and prices',
+          'Complete secure transactions',
+          'Manage buyer/seller profile',
+        ],
+        keyFeatures: ['Search and filtering', 'Seller profiles', 'Reviews/ratings', 'Secure checkout', 'Messaging'],
+        notFeatures: ['Single-brand store locator'],
+        differentiators: [],
+        confidence: hasSiteData ? 75 : 45,
+      };
+
+    case 'service':
+      return {
+        type: 'service',
+        primaryRevenue: 'Service fees',
+        websitePurpose: 'Generate leads and bookings.',
+        primaryUserGoals: [
+          'Understand available services',
+          'Book an appointment or consultation',
+          'Contact the business',
+          'Read reviews and credentials',
+        ],
+        keyFeatures: ['Service catalog', 'Booking form', 'Contact information', 'Testimonials', 'Team/credentials'],
+        notFeatures: ['Shopping cart', 'Product inventory'],
+        differentiators: [],
+        confidence: hasSiteData ? 70 : 40,
+      };
+
+    case 'media':
+      return {
+        type: 'media',
+        primaryRevenue: 'Advertising or subscriptions',
+        websitePurpose: 'Publish and distribute content to readers.',
+        primaryUserGoals: [
+          'Read articles and news',
+          'Browse by category or topic',
+          'Subscribe for updates',
+          'Share content',
+        ],
+        keyFeatures: ['Article listings', 'Category navigation', 'Search', 'Newsletter signup', 'Social sharing'],
+        notFeatures: ['Shopping cart', 'Store locator'],
+        differentiators: [],
+        confidence: hasSiteData ? 70 : 40,
+      };
+
+    case 'nonprofit':
+      return {
+        type: 'nonprofit',
+        primaryRevenue: 'Donations and grants',
+        websitePurpose: 'Inspire action and facilitate donations.',
+        primaryUserGoals: [
+          'Understand the mission',
+          'Make a donation',
+          'Find volunteer opportunities',
+          'Learn about impact',
+        ],
+        keyFeatures: ['Mission statement', 'Donate button', 'Impact metrics', 'Volunteer signup', 'Event calendar'],
+        notFeatures: ['Shopping cart', 'Product catalog'],
+        differentiators: [],
+        confidence: hasSiteData ? 70 : 40,
+      };
+
+    case 'other':
+    default:
+      return {
+        type: 'other',
+        primaryRevenue: 'Unknown',
+        websitePurpose: 'Inform visitors about the organization.',
+        primaryUserGoals: ['Learn about the organization', 'Find contact information'],
+        keyFeatures: ['About page', 'Contact form'],
+        notFeatures: [],
+        differentiators: [],
+        confidence: 20,
+      };
+  }
+}
+
 // ─── Site Analysis ─────────────────────────────────────────────────
 
 /**
@@ -639,6 +881,15 @@ export async function analyzeSite(url: string): Promise<SiteAnalysis | null> {
       }
     });
 
+    // Extract CTA texts from buttons and prominent links
+    const ctaTexts: string[] = [];
+    $('button, a.btn, [role="button"], .cta, [class*="cta"], [class*="button"]').each((_i, el) => {
+      const text = $(el).text().trim();
+      if (text && text.length < 50 && !ctaTexts.includes(text)) {
+        ctaTexts.push(text);
+      }
+    });
+
     return {
       url,
       palette,
@@ -646,6 +897,7 @@ export async function analyzeSite(url: string): Promise<SiteAnalysis | null> {
       layoutPatterns,
       contentTone,
       navItems,
+      ctaTexts,
       fetchedAt: new Date().toISOString(),
     };
   } catch {
@@ -657,7 +909,8 @@ export async function analyzeSite(url: string): Promise<SiteAnalysis | null> {
 
 /**
  * Perform complete business research for a brief.
- * Orchestrates site analysis, competitor analysis, audience insights, and market positioning.
+ * Orchestrates site analysis, competitor analysis, audience insights,
+ * market positioning, and business model inference.
  */
 export async function researchBusiness(
   brief: BusinessBrief,
@@ -723,11 +976,15 @@ export async function researchBusiness(
   // Market position
   const marketPosition = inferMarketPosition(brief, currentSite);
 
+  // Business model inference
+  const businessModel = inferBusinessModel(brief, currentSite);
+
   // Cap confidence at 100
   confidence = Math.min(confidence, 100);
 
   return {
     brief,
+    businessModel,
     currentSite,
     competitors,
     audienceInsights,

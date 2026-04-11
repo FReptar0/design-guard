@@ -1,110 +1,139 @@
 ---
 name: forge-discover
 description: >
-  Research a business and generate a tailored DESIGN.md based on real-world
-  data. Use when the user wants to redesign a website, create a design
-  system for a specific business, or start a new web project with a real
-  brand in mind. Analyzes the current website, studies competitors,
-  understands the audience, and produces a design system that is specific
-  to THIS business. This is the recommended entry point over /forge-design
-  when real business context is available.
+  Research a business and generate a tailored DESIGN.md. Use when the user
+  wants to redesign a website, create a design system, or build a web
+  presence for a specific business. Investigates the business model,
+  analyzes competitors, understands the audience, and only generates
+  when confident enough. The recommended entry point for any real
+  business project.
 ---
 
-Research a business and generate a tailored DESIGN.md based on real-world data.
+Research a business and generate a tailored DESIGN.md with autonomous investigation.
 
-## When to Use This vs /forge-design
+## Core Principle: Understand Before Designing
 
-- **/forge-discover**: When you know the actual business (name, URL, industry). Produces a researched, differentiated design system.
-- **/forge-design**: Quick generic design system from a brief. No research. Uses industry presets.
+NEVER generate a DESIGN.md until you understand the business. A beautiful design for the wrong business model is worse than no design at all.
 
-## Phase 1: Gather Brief
+## Phase 1: Gather Context (REQUIRED — cannot skip)
 
-1. If the user provided a business description, extract:
-   - Company name (required)
-   - Industry / domain (required)
-   - Target audience (required)
-   - Aesthetic direction (optional — will infer from research)
-   - Website URL (optional but highly valuable)
-   - Locale / market (e.g., "Mexican market", "US enterprise")
+Before ANY research or generation, establish these fundamentals:
 
-2. If information is missing, ask for at minimum: company name, what they do, and who their customers are.
+1. **What the business IS**: 
+   - If only a company name is given, ask: "What does [company] do? What products or services do they offer?"
+   - If unclear whether physical or digital: "Do they sell online, in physical stores, or both?"
 
-## Phase 2: Research
+2. **Who the customers are**:
+   - "Who are their primary customers? (families, developers, enterprises, etc.)"
 
-3. **Analyze current website** (if URL provided or discoverable):
-   - Use WebFetch to retrieve the homepage HTML
-   - Extract current color palette from CSS (hex values in stylesheets, custom properties, inline styles)
-   - Identify current fonts (Google Fonts links, font-family declarations)
-   - Note layout patterns (hero style, grid structure, nav pattern)
-   - Report findings: "I found your current brand uses [colors], [fonts]"
+3. **What the website should achieve**:
+   - "What is the main goal of this website? (drive store visits, sell online, generate leads, inform)"
+   - This is CRITICAL — it determines the entire page structure
 
-4. **Research competitors** (2-3 in the same industry/market):
-   - Use WebSearch: "[company name] competitors" or "[industry] [market] companies"
-   - For each competitor, use WebFetch to analyze their website
-   - Extract their color schemes and typography
-   - Note shared patterns (table stakes to include)
-   - Note distinctive elements (inspiration for differentiation)
-   - Report: "Your competitors use [patterns]. To differentiate, we should..."
+4. **Current web presence**:
+   - "Do they have a current website? What URL?"
 
-5. **Understand the audience**:
-   - Use WebSearch for "[target audience] website expectations" or "[industry] UX best practices"
-   - Identify trust signals important for this audience
-   - Consider cultural factors (especially for non-US markets)
+If the user provides a detailed brief, extract answers from it. But if any critical info is missing (especially #1 and #3), ASK before proceeding. Do NOT assume.
 
-## Phase 3: Synthesize DESIGN.md
+## Phase 2: Research (autonomous)
 
-6. Generate DESIGN.md with 8 sections using research data:
+Once you have the basics, research to validate and enrich:
 
-   1. **Visual Theme & Atmosphere**: Reference the actual brand and market position. Be specific: "A warm, community-rooted aesthetic that positions [company] as the neighborhood alternative to [competitor]'s corporate feel."
+5. **Search for the business**: Use WebSearch for "[company name]" and "[company name] business model"
+   - Determine: Is this physical retail? E-commerce? SaaS? Service?
+   - Find: Store count, locations, revenue model, market position
+   - Find: Slogan, tagline, brand messaging
 
-   2. **Color Palette & Roles**: Use REAL brand colors if extracted. Explain why they differ from competitors. Name colors descriptively tied to the brand (not "Primary" but "Storefront Red").
+6. **Analyze current website** (if URL available): Use WebFetch on the homepage
+   - Look at navigation items — what do they tell you about the business?
+     - "Sucursales/Stores/Locations" → physical retail
+     - "Cart/Checkout/Shop" → e-commerce
+     - "Login/Dashboard/API" → SaaS
+     - "Contact/Book/Schedule" → service
+   - Extract current brand colors from CSS
+   - Identify current fonts
+   - Note CTAs — what action does the site want visitors to take?
 
-   3. **Typography**: Choose fonts that DIFFERENTIATE from competitors. If all competitors use geometric sans-serifs, consider a humanist or serif pairing.
+7. **Research competitors**: Use WebSearch for "[company name] competitors" or "[industry] [market] companies"
+   - Analyze 1-2 competitor websites via WebFetch
+   - Note their color schemes, fonts, and layout patterns
+   - Identify what to differentiate FROM
 
-   4. **Spacing & Layout**: Standard layout tokens.
+## Confidence Check (MUST pass before generating)
 
-   5. **Component Patterns**: At least 3 components with specific style rules.
+Rate your confidence on each dimension (0-100):
 
-   6. **Iconography**: Icon style matching the aesthetic.
+| Dimension | Minimum Required | What It Means |
+|-----------|-----------------|---------------|
+| Business model | >= 80 | You know what they do and how they make money |
+| Website purpose | >= 80 | You know what the site should achieve |
+| Audience | >= 60 | You know who the customers are |
+| Visual identity | >= 40 | You have colors/fonts (can use presets if needed) |
+| Competitive | >= 30 | You know at least who competitors are |
 
-   7. **Imagery Guidelines**: Reference the ACTUAL target audience, not generic "professional photography."
+**Weighted average must be >= 70 to proceed.**
 
-   8. **Do's and Don'ts**: Standard anti-slop rules PLUS business-specific rules. Example: "Don't use [competitor's signature color] — it creates brand confusion."
+If below threshold:
+- Ask the user for missing information
+- Do more research
+- DO NOT proceed until confident
+
+Report your confidence: "My understanding confidence: [X]%. Business model: [type]. Proceeding to generate."
+
+## Phase 3: Generate DESIGN.md
+
+8. Generate DESIGN.md with **9 effective sections** (Section 1 expanded):
+
+### Section 1: Visual Theme & Business Context
+
+This section is the most important — Stitch reads it on every generation.
+
+Include:
+- 2-3 sentences describing the visual direction
+- **Business Model**: What the company IS (e.g., "Physical retail grocery chain with 3,300+ stores")
+- **Website Purpose**: What the site should DO (e.g., "Drive foot traffic to stores. NOT an e-commerce site.")
+- **Primary User Goals**: Numbered list of what visitors want to accomplish
+- **Key Page Elements**: What the site MUST have (e.g., "Store locator, weekly deals, category browse")
+- **Avoid**: What the site must NOT have (e.g., "Shopping cart, checkout, add-to-cart buttons")
+
+### Sections 2-7: Standard design tokens
+Colors, typography, spacing, components, iconography, imagery — as before.
+
+### Section 8: Do's and Don'ts
+Standard anti-slop rules PLUS business-model-specific rules:
+- Physical retail: "Do make store locator the primary CTA", "Don't add shopping cart"
+- SaaS: "Do show product screenshots", "Don't use generic feature icons"
+- Service: "Do make booking/contact primary", "Don't hide contact info"
+
+## Phase 4: Validate & Present
+
+9. Before writing, self-check:
+   - Does Section 1 include business model context? (REQUIRED)
+   - Does it explicitly state what the site is NOT? (REQUIRED for physical retail)
+   - Are Do's/Don'ts business-specific, not just visual? (REQUIRED)
+   - Are all colors hex values? (REQUIRED)
+   - Is it under 3000 tokens? (REQUIRED)
+   - Does it reference the actual audience? (REQUIRED)
+
+10. Present findings to user:
+    - "Business type: [type]"
+    - "Website purpose: [purpose]"
+    - "Brand colors found: [colors]"
+    - "Competitor differentiation: [approach]"
+    - "Confidence: [X]%"
+
+11. Write DESIGN.md and save research to `.forge-research/`.
+
+12. Suggest first screen prompt that ALIGNS with the business model:
+    - Physical retail: "A landing page with hero, store locator as primary CTA, weekly deals section, and category browse"
+    - SaaS: "A landing page with product demo hero, feature section, pricing tiers, and signup CTA"
+    - Service: "A landing page with service overview, booking CTA, testimonials, and team section"
 
 ## Guardrails
 
-- All colors MUST be hex values — no "trustworthy blue"
-- No `<!-- -->` placeholder comments anywhere
-- Font families from Google Fonts (or specify self-hosted)
-- Do's/Don'ts include at least 3 business-specific rules
-- Total under ~3000 tokens (Stitch reads it every generation)
-- Every section has real content, not templates
-- Reference the actual audience, never just "users"
-
-## Phase 4: Validate & Output
-
-7. Self-check the DESIGN.md:
-   - Specificity: Are design decisions backed by research?
-   - Differentiation: Do colors/fonts differ from competitors?
-   - Completeness: All 8 sections filled with real content?
-   - Actionability: Can Stitch follow these rules unambiguously?
-
-8. Report quality:
-   - "Research confidence: X% (based on N data sources)"
-   - "Specificity: X of Y decisions backed by research data"
-
-9. Write DESIGN.md to project root (ask before overwriting).
-
-10. Save research data to `.forge-research/latest.json`.
-
-11. **Next steps**:
-    - "Create a Stitch design system with `mcp__stitch__create_design_system`"
-    - "Generate the first screen with `/forge-generate`"
-    - "Review and adjust before generating"
-
-## Fallback Behavior
-
-- If WebFetch/WebSearch fail, fall back to industry presets
-- If only partial research succeeds, use what's available
-- Always tell the user what was researched vs inferred
-- If confidence < 30%, suggest `/forge-design` instead
+- NEVER generate before understanding the business model
+- NEVER assume e-commerce — most businesses in the world are NOT online stores
+- ALWAYS include business context in Section 1 of DESIGN.md
+- ALWAYS include what the site should NOT have (notFeatures)
+- If unsure about the business model, ASK the user
+- The DESIGN.md is not just a style guide — it's the business context that prevents wrong designs

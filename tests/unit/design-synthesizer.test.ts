@@ -12,6 +12,7 @@ describe('design synthesizer', () => {
     const { synthesizeDesign } = await import('../../src/research/design-synthesizer.js');
     const result = synthesizeDesign({
       brief: { companyName: 'TestCo', industry: 'tech', targetAudience: 'devs', aesthetic: 'minimal' },
+      businessModel: { type: 'other', primaryRevenue: 'Unknown', websitePurpose: 'Inform visitors.', primaryUserGoals: [], keyFeatures: [], notFeatures: [], differentiators: [], confidence: 0 },
       competitors: [],
       audienceInsights: { trustSignals: [], accessibilityNeeds: [], culturalConsiderations: [], expectations: [] },
       marketPosition: { pricePoint: 'mid-range', reach: 'national', personality: 'modern' },
@@ -27,6 +28,7 @@ describe('design synthesizer', () => {
     const { synthesizeDesign } = await import('../../src/research/design-synthesizer.js');
     const result = synthesizeDesign({
       brief: { companyName: 'RedBrand', industry: 'retail', targetAudience: 'families', aesthetic: 'warm' },
+      businessModel: { type: 'e-commerce', primaryRevenue: 'Online product sales', websitePurpose: 'Sell products online.', primaryUserGoals: ['Browse products'], keyFeatures: ['Product catalog'], notFeatures: [], differentiators: [], confidence: 60 },
       currentSite: {
         url: 'https://redbrand.com',
         palette: { colors: [{ hex: '#DC0C0C', frequency: 15, context: 'background' }, { hex: '#F5B800', frequency: 8, context: 'accent' }], dominantHex: '#DC0C0C', accentHex: '#F5B800' },
@@ -51,6 +53,7 @@ describe('design synthesizer', () => {
     const { synthesizeTypography } = await import('../../src/research/design-synthesizer.js');
     const result = synthesizeTypography({
       brief: { companyName: 'Test', industry: 'retail', targetAudience: 'all', aesthetic: 'warm' },
+      businessModel: { type: 'other', primaryRevenue: 'Unknown', websitePurpose: 'Inform visitors.', primaryUserGoals: [], keyFeatures: [], notFeatures: [], differentiators: [], confidence: 0 },
       competitors: [{
         url: 'https://comp.com', name: 'Competitor',
         palette: { colors: [], dominantHex: '#000', },
@@ -71,6 +74,7 @@ describe('design synthesizer', () => {
     const { synthesizeDesign } = await import('../../src/research/design-synthesizer.js');
     const result = synthesizeDesign({
       brief: { companyName: 'Test', industry: 'retail', targetAudience: 'all', aesthetic: 'warm' },
+      businessModel: { type: 'physical-retail', primaryRevenue: 'Store sales', websitePurpose: 'Drive foot traffic.', primaryUserGoals: ['Find store'], keyFeatures: ['Store locator'], notFeatures: ['Shopping cart'], differentiators: [], confidence: 50 },
       currentSite: {
         url: 'https://test.com',
         palette: { colors: [{ hex: '#AA0000', frequency: 10, context: 'background' }], dominantHex: '#AA0000' },
@@ -85,6 +89,89 @@ describe('design synthesizer', () => {
       fallbacksUsed: [],
     });
     expect(result.tokenEstimate).toBeLessThanOrEqual(3000);
+  });
+
+  it('includes business context in Section 1 for physical retail', async () => {
+    const { synthesizeDesign } = await import('../../src/research/design-synthesizer.js');
+    const result = synthesizeDesign({
+      brief: { companyName: 'Tiendas 3B', industry: 'hard-discount retail', targetAudience: 'Mexican families', aesthetic: 'warm' },
+      businessModel: {
+        type: 'physical-retail',
+        primaryRevenue: 'Physical store sales',
+        websitePurpose: 'Drive foot traffic to nearest store.',
+        primaryUserGoals: ['Find nearest store', 'See weekly deals'],
+        keyFeatures: ['Store locator', 'Weekly deals'],
+        notFeatures: ['Shopping cart', 'Online checkout'],
+        differentiators: ['3,300+ stores'],
+        confidence: 80,
+      },
+      competitors: [],
+      audienceInsights: { trustSignals: [], accessibilityNeeds: [], culturalConsiderations: [], expectations: [] },
+      marketPosition: { pricePoint: 'budget', reach: 'national', personality: 'modern' },
+      researchedAt: new Date().toISOString(),
+      confidence: 60,
+      fallbacksUsed: [],
+    });
+
+    expect(result.markdown).toContain('physical retail');
+    expect(result.markdown).toContain('foot traffic');
+    expect(result.markdown).toContain('Shopping cart');
+    expect(result.markdown.toLowerCase()).toContain('store locator');
+    // Should contain physical-retail Do's/Don'ts
+    expect(result.markdown).toContain('not an e-commerce site');
+  });
+
+  it('includes e-commerce context for online stores', async () => {
+    const { synthesizeDesign } = await import('../../src/research/design-synthesizer.js');
+    const result = synthesizeDesign({
+      brief: { companyName: 'ShopMX', industry: 'online retail', targetAudience: 'shoppers', aesthetic: 'modern' },
+      businessModel: {
+        type: 'e-commerce',
+        primaryRevenue: 'Online product sales',
+        websitePurpose: 'Sell products directly online.',
+        primaryUserGoals: ['Browse products', 'Add to cart', 'Checkout'],
+        keyFeatures: ['Product catalog', 'Shopping cart', 'Checkout'],
+        notFeatures: [],
+        differentiators: [],
+        confidence: 70,
+      },
+      competitors: [],
+      audienceInsights: { trustSignals: [], accessibilityNeeds: [], culturalConsiderations: [], expectations: [] },
+      marketPosition: { pricePoint: 'mid-range', reach: 'national', personality: 'modern' },
+      researchedAt: new Date().toISOString(),
+      confidence: 50,
+      fallbacksUsed: [],
+    });
+
+    expect(result.markdown).toContain('e commerce');
+    expect(result.markdown.toLowerCase()).toContain('shopping cart');
+    expect(result.markdown).not.toContain('NOT an e-commerce');
+  });
+
+  it('adds saas-specific dos and donts', async () => {
+    const { synthesizeDosAndDonts } = await import('../../src/research/design-synthesizer.js');
+    const result = synthesizeDosAndDonts({
+      brief: { companyName: 'SaaSCo', industry: 'saas', targetAudience: 'developers', aesthetic: 'minimal' },
+      businessModel: {
+        type: 'saas',
+        primaryRevenue: 'Subscription revenue',
+        websitePurpose: 'Convert visitors to trial signups.',
+        primaryUserGoals: ['Try the product', 'Compare pricing'],
+        keyFeatures: ['Product demo', 'Pricing page'],
+        notFeatures: [],
+        differentiators: [],
+        confidence: 80,
+      },
+      competitors: [],
+      audienceInsights: { trustSignals: [], accessibilityNeeds: [], culturalConsiderations: [], expectations: [] },
+      marketPosition: { pricePoint: 'mid-range', reach: 'global', personality: 'innovative' },
+      researchedAt: new Date().toISOString(),
+      confidence: 60,
+      fallbacksUsed: [],
+    });
+
+    expect(result.dos.some(d => d.includes('pricing'))).toBe(true);
+    expect(result.dos.some(d => d.includes('free trial') || d.includes('demo'))).toBe(true);
   });
 });
 
