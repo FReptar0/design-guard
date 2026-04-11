@@ -198,7 +198,7 @@ export function generateDosAndDonts(industry: string, audience: string): { dos: 
     extraDos.push('Show prices prominently in every product display');
     extraDos.push('Use real product photography, never illustrations for products');
     extraDos.push('Show concrete savings amounts (pesos, not percentages)');
-    extraDonts.push("Don't make it look cheap — the design should feel confident and trustworthy");
+    extraDonts.push("Don't make it look cheap — maintain a confident, trustworthy tone throughout");
     extraDonts.push("Don't use dark backgrounds for main content areas");
     extraDonts.push("Don't hide pricing behind clicks — visibility builds trust");
   }
