@@ -19,6 +19,7 @@
   <img src="https://img.shields.io/badge/Ink-FF4154?style=flat&logo=react&logoColor=white" alt="Ink">
   <img src="https://img.shields.io/badge/Vitest-6E9F18?style=flat&logo=vitest&logoColor=white" alt="Vitest">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT">
+  <a href="https://www.npmjs.com/package/stitch-forge"><img src="https://img.shields.io/npm/v/stitch-forge.svg?style=flat&color=6C5CE7" alt="npm"></a>
 </p>
 
 ---
@@ -27,7 +28,7 @@
   <img src=".github/assets/hero-banner.jpg" alt="Stitch Forge — Landing page generada con IA" width="800">
 </p>
 
-<p align="center"><em>Esta landing page fue generada por Stitch Forge usando el pipeline completo. <a href="https://freptar0.github.io/stitch-forge/">Demo en vivo</a></em></p>
+<p align="center"><em>Esta landing page fue generada por Stitch Forge usando el pipeline completo. <a href="https://freptar0.github.io/stitch-forge/">Demo en vivo</a> · <a href=".github/assets/full-landing.jpg">Screenshot completo</a></em></p>
 
 ---
 
