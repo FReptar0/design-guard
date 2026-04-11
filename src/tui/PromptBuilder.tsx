@@ -20,7 +20,7 @@ const PAGE_TYPES = [
 
 const MODEL_OPTIONS = [
   { label: 'Flash — fast iteration (350/month)', value: 'flash' },
-  { label: 'Pro — higher quality (50/month)', value: 'pro' },
+  { label: 'Pro — higher quality (200/month)', value: 'pro' },
 ];
 
 interface PromptBuilderProps {
