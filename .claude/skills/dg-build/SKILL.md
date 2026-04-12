@@ -64,12 +64,25 @@ For each screen:
 
 Tell the user: "Your Next.js project is in `dist/`. To run it: open a terminal, navigate to `dist/`, run `npm install`, then `npm run dev`. To deploy: push to Vercel or run `npm run build` for static export."
 
-## Step 4: Next Steps
+## Step 4: Validate Output Quality
 
-After building, suggest:
+After building, run `dg lint` against the generated HTML to check for AI slop patterns, accessibility issues, and design system adherence:
+
+```
+dg lint dist/ --fail-threshold 60
+```
+
+If the lint score is below 60 for any page, inform the user which files need attention and what issues were found. Suggest using `/dg-generate` with specific refinements to fix flagged issues before deploying.
+
+For CI/CD pipelines, suggest the JSON format: `dg lint dist/ --format json --fail-on-error`
+
+## Step 5: Next Steps
+
+After building and validating, suggest:
 - "Open `dist/index.html` in your browser to review" (static)
 - "If you want to refine a page, use `/dg-generate` with a specific change"
 - "To deploy, push the `dist/` folder to your hosting provider"
+- "Run `dg lint dist/` anytime to re-check output quality"
 
 ## Guardrails
 

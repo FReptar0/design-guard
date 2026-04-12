@@ -1,25 +1,29 @@
-import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { log } from '../utils/logger.js';
-import { validatePrompt, buildInitialPrompt } from '@design-guard/core';
-import type { ScreenSpec } from '@design-guard/core';
+import { validatePrompt } from '@design-guard/core';
 import { canGenerate, getQuotaStatus } from '../utils/quota.js';
-import { incrementQuota } from '../utils/config.js';
-import { StitchMcpClient } from '../mcp/client.js';
+import { getConfig, incrementQuota, type GeneratorType } from '../utils/config.js';
+import { getGenerator } from '../generators/index.js';
 
 interface GenerateOptions {
   model: string;
   project?: string;
   preview?: boolean;
+  generator?: string;
 }
 
 export async function runGenerate(description: string, opts: GenerateOptions): Promise<void> {
+  const config = getConfig();
+  const generatorName = (opts.generator || config.generator || 'stitch') as GeneratorType;
   const model = opts.model === 'pro' ? 'GEMINI_3_PRO' as const : 'GEMINI_2_5_FLASH' as const;
 
-  // Check quota
-  if (!canGenerate(model)) {
-    const status = getQuotaStatus();
-    log.error(`No ${model} generations remaining. Resets ${status.resetDate}.`);
-    process.exit(1);
+  // Quota check only applies to Stitch generator
+  if (generatorName === 'stitch') {
+    if (!canGenerate(model)) {
+      const status = getQuotaStatus();
+      log.error(`No ${model} generations remaining. Resets ${status.resetDate}.`);
+      process.exit(1);
+    }
   }
 
   // Check for DESIGN.md
@@ -29,8 +33,6 @@ export async function runGenerate(description: string, opts: GenerateOptions): P
   }
 
   // Build prompt
-  // For CLI usage, the description IS the prompt
-  // For Claude Code slash command, a structured ScreenSpec is built
   const prompt = description;
 
   // Validate
@@ -42,17 +44,37 @@ export async function runGenerate(description: string, opts: GenerateOptions): P
     process.exit(1);
   }
 
-  // Get project ID
-  let client: StitchMcpClient;
+  // Get generator
+  let generator;
   try {
-    client = new StitchMcpClient();
+    generator = getGenerator(generatorName);
   } catch (err) {
-    log.error(err instanceof Error ? err.message : 'Failed to initialize Stitch client.');
+    log.error(err instanceof Error ? err.message : 'Failed to create generator.');
     process.exit(1);
   }
-  let projectId = opts.project;
 
-  if (!projectId) {
+  // For Stitch, we need a project ID; for Claude Direct, we don't
+  let projectId = opts.project || config.projectId;
+
+  if (generatorName === 'stitch' && !projectId) {
+    // Initialize Stitch and resolve project
+    try {
+      await generator.initialize({ type: 'stitch' });
+    } catch (err) {
+      log.error(err instanceof Error ? err.message : 'Failed to initialize Stitch generator.');
+      process.exit(1);
+    }
+
+    // Fall back to MCP client for project listing
+    const { StitchMcpClient } = await import('../mcp/client.js');
+    let client: InstanceType<typeof StitchMcpClient>;
+    try {
+      client = new StitchMcpClient();
+    } catch (err) {
+      log.error(err instanceof Error ? err.message : 'Failed to initialize Stitch client.');
+      process.exit(1);
+    }
+
     log.info('No project ID specified. Listing projects...');
     let projects: Awaited<ReturnType<typeof client.listProjects>>;
     try {
@@ -87,28 +109,49 @@ export async function runGenerate(description: string, opts: GenerateOptions): P
     }
   }
 
+  // Initialize generator with resolved config
+  try {
+    await generator.initialize({ type: generatorName, projectId, model });
+  } catch (err) {
+    log.error(err instanceof Error ? err.message : `Failed to initialize ${generatorName} generator.`);
+    process.exit(1);
+  }
+
   // Generate
   try {
-    log.step(1, 3, `Sending prompt to Stitch (${model})...`);
-    const result = await client.generateScreen(projectId, prompt, model);
+    const designMd = hasDesignMd ? readFileSync('DESIGN.md', 'utf-8') : undefined;
 
-    log.step(2, 3, 'Retrieving screen code...');
-    const html = await client.getScreenCode(projectId, result.screenId, result.htmlCodeUrl);
+    log.step(1, 2, `Generating screen via ${generator.name} (${model})...`);
+    const screen = await generator.generateScreen(prompt, {
+      designMd,
+      model,
+      screenName: undefined,
+    });
 
-    log.step(3, 3, 'Saving...');
+    log.step(2, 2, 'Saving...');
     if (!existsSync('screens')) mkdirSync('screens');
-    const filename = `screens/${result.name || result.screenId}.html`;
-    writeFileSync(filename, html);
+    const filename = `screens/${screen.name || screen.id}.html`;
 
-    // Update quota
-    incrementQuota(model);
-    const status = getQuotaStatus();
+    // Only write HTML file if we got actual HTML (not a placeholder for Claude Direct prompts)
+    if (screen.html && !screen.html.startsWith('<!-- Generation request saved')) {
+      writeFileSync(filename, screen.html);
+      log.success(`Screen saved: ${filename}`);
+    } else {
+      log.success(`Generation request created for ${generator.name}.`);
+      if (screen.metadata?.promptPath) {
+        log.info(`Prompt file: ${screen.metadata.promptPath}`);
+      }
+    }
 
-    log.success(`Screen saved: ${filename}`);
-    log.quota(model, model === 'GEMINI_2_5_FLASH' ? status.flash.used : status.pro.used,
-      model === 'GEMINI_2_5_FLASH' ? status.flash.limit : status.pro.limit);
+    // Update quota for Stitch generator
+    if (generatorName === 'stitch') {
+      incrementQuota(model);
+      const status = getQuotaStatus();
+      log.quota(model, model === 'GEMINI_2_5_FLASH' ? status.flash.used : status.pro.used,
+        model === 'GEMINI_2_5_FLASH' ? status.flash.limit : status.pro.limit);
+    }
 
-    if (opts.preview) {
+    if (opts.preview && screen.html && !screen.html.startsWith('<!-- Generation request saved')) {
       const { openInBrowser } = await import('../utils/preview.js');
       await openInBrowser(filename);
       log.info('Preview opened in browser.');

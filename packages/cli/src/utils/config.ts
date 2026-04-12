@@ -3,12 +3,15 @@ import { join } from 'node:path';
 
 const CONFIG_FILE = '.guardrc.json';
 
+export type GeneratorType = 'stitch' | 'claude';
+
 export interface StitchConfig {
   apiKey?: string;
   projectId?: string;
   projectName?: string;
   defaultModel: 'GEMINI_3_PRO' | 'GEMINI_2_5_FLASH';
   framework?: 'static' | 'astro' | 'nextjs';
+  generator?: GeneratorType;
   screens: Array<{
     id: string;
     name: string;

@@ -6,15 +6,18 @@ const program = new Command();
 
 program
   .name('dg')
-  .description('Design Guard — CLI framework for automating web design with Google Stitch')
-  .version('0.3.1');
+  .description('Design Guard -- CLI framework for automating web design with Google Stitch')
+  .version('0.3.1')
+  .option('-g, --generator <type>', 'Generator to use: stitch, claude');
 
 program
   .command('init')
   .description('Setup project: authenticate and create .guardrc.json')
-  .action(async () => {
+  .option('-g, --generator <type>', 'Generator to use: stitch, claude')
+  .action(async (opts) => {
+    const generator = opts.generator || program.opts().generator;
     const { runInit } = await import('./commands/init.js');
-    await runInit();
+    await runInit({ generator });
   });
 
 program
@@ -61,10 +64,12 @@ program
   .argument('<description...>', 'Screen description')
   .option('-m, --model <model>', 'Model to use (flash|pro)', 'flash')
   .option('-p, --project <id>', 'Stitch project ID')
+  .option('-g, --generator <type>', 'Generator to use: stitch, claude')
   .option('--preview', 'Open screen in browser after generating')
   .action(async (description: string[], opts) => {
+    const generator = opts.generator || program.opts().generator;
     const { runGenerate } = await import('./commands/generate.js');
-    await runGenerate(description.join(' '), opts);
+    await runGenerate(description.join(' '), { ...opts, generator });
   });
 
 program
@@ -92,9 +97,11 @@ program
   .command('sync')
   .description('Sync local files with Stitch project')
   .argument('[projectId]', 'Stitch project ID')
-  .action(async (projectId?: string) => {
+  .option('-g, --generator <type>', 'Generator to use: stitch, claude')
+  .action(async (projectId?: string, opts?: { generator?: string }) => {
+    const generator = opts?.generator || program.opts().generator;
     const { runSync } = await import('./commands/sync.js');
-    await runSync(projectId);
+    await runSync(projectId, { generator });
   });
 
 program
@@ -104,6 +111,23 @@ program
   .action(async (opts) => {
     const { runResearch } = await import('./commands/research.js');
     await runResearch(opts.topic);
+  });
+
+program
+  .command('lint [files...]')
+  .description('Validate HTML files against DESIGN.md')
+  .option('--design-system <path>', 'Path to DESIGN.md (auto-detects if not specified)')
+  .option('--format <type>', 'Output format: terminal, json, sarif', 'terminal')
+  .option('--fail-on-error', 'Exit with code 1 if any errors found')
+  .option('--fail-threshold <score>', 'Exit with code 1 if any file scores below this', parseInt)
+  .action(async (files: string[], opts: { designSystem?: string; format?: string; failOnError?: boolean; failThreshold?: number }) => {
+    const { runLint } = await import('./commands/lint.js');
+    await runLint(files.length ? files : ['.'], {
+      designSystem: opts.designSystem,
+      format: opts.format as 'terminal' | 'json' | 'sarif',
+      failOnError: opts.failOnError,
+      failThreshold: opts.failThreshold,
+    });
   });
 
 program
