@@ -179,7 +179,7 @@ describe('design validator', () => {
   beforeEach(() => { vi.resetModules(); });
 
   it('scores high for specific, complete DESIGN.md', async () => {
-    const { scoreDesignMd } = await import('../../src/utils/design-validator.js');
+    const { scoreDesignMd } = await import('../../src/validation/design-validator.js');
     const md = `# TestCo — Design System
 ## 1. Visual Theme & Atmosphere
 Bold industrial aesthetic for TestCo, a SaaS platform. Targeting developers who value speed.
@@ -230,7 +230,7 @@ Industrial photography targeting developers. 16:9 hero images with code editors.
   });
 
   it('scores low for placeholder-heavy DESIGN.md', async () => {
-    const { scoreDesignMd } = await import('../../src/utils/design-validator.js');
+    const { scoreDesignMd } = await import('../../src/validation/design-validator.js');
     const md = `# Test
 ## 1. Visual Theme & Atmosphere
 <!-- TODO -->
@@ -255,7 +255,7 @@ Industrial photography targeting developers. 16:9 hero images with code editors.
   });
 
   it('detects competitor color similarity', async () => {
-    const { scoreDifferentiation } = await import('../../src/utils/design-validator.js');
+    const { scoreDifferentiation } = await import('../../src/validation/design-validator.js');
     const md = '| Primary | Red | #DC0C0C | CTAs |';
     const competitors = [{
       url: '', name: 'Comp',
@@ -268,7 +268,7 @@ Industrial photography targeting developers. 16:9 hero images with code editors.
   });
 
   it('formats report correctly', async () => {
-    const { formatDesignQualityReport } = await import('../../src/utils/design-validator.js');
+    const { formatDesignQualityReport } = await import('../../src/validation/design-validator.js');
     const report = formatDesignQualityReport({
       specificity: 20, differentiation: 15, completeness: 25, actionability: 22,
       total: 82, issues: [{ section: 'Typography', severity: 'warning', message: 'Contains vague language' }],

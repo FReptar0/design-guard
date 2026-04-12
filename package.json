@@ -1,46 +1,20 @@
 {
-  "name": "design-guard",
-  "version": "0.3.1",
-  "description": "Design Guard — CLI framework for automating web design with Google Stitch MCP",
-  "type": "module",
-  "bin": {
-    "design-guard": "./dist/index.js",
-    "dg": "./dist/index.js"
-  },
+  "name": "design-guard-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/core",
+    "packages/cli"
+  ],
   "scripts": {
-    "dev": "tsx src/index.ts tui",
-    "build": "tsc && cp src/research/known-state.json dist/research/known-state.json",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "lint": "eslint src/ tests/",
-    "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build && npm run test:run"
-  },
-  "dependencies": {
-    "commander": "^12.1.0",
-    "ink": "^5.1.0",
-    "ink-text-input": "^6.0.0",
-    "ink-select-input": "^6.0.0",
-    "ink-spinner": "^5.0.0",
-    "ink-table": "^3.1.0",
-    "react": "^18.3.1",
-    "chalk": "^5.3.0",
-    "zod": "^3.23.0",
-    "dotenv": "^16.4.0",
-    "node-fetch": "^3.3.0",
-    "cheerio": "^1.0.0",
-    "conf": "^13.0.0",
-    "ora": "^8.1.0",
-    "boxen": "^8.0.0",
-    "figures": "^6.1.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.5.0",
-    "tsx": "^4.19.0",
-    "vitest": "^2.1.0",
-    "@types/react": "^18.3.0",
-    "@types/node": "^22.0.0",
-    "eslint": "^9.0.0"
+    "build": "npm run build --workspace=packages/core && npm run build --workspace=packages/cli",
+    "test": "npm run test:run --workspaces",
+    "test:run": "npm run test:run --workspaces",
+    "test:core": "npm run test:run --workspace=packages/core",
+    "test:cli": "npm run test:run --workspace=packages/cli",
+    "typecheck": "npm run typecheck --workspaces",
+    "clean": "rm -rf packages/core/dist packages/cli/dist",
+    "dev": "npm run dev --workspace=packages/cli",
+    "lint": "eslint packages/"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -50,31 +24,5 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/freptar0/design-guard.git"
-  },
-  "homepage": "https://github.com/freptar0/design-guard#readme",
-  "bugs": {
-    "url": "https://github.com/freptar0/design-guard/issues"
-  },
-  "keywords": [
-    "design-guard",
-    "design-quality",
-    "design-lint",
-    "stitch",
-    "google-stitch",
-    "mcp",
-    "web-design",
-    "cli",
-    "design-system",
-    "ai-design",
-    "claude-code",
-    "design-intelligence",
-    "anti-slop"
-  ],
-  "files": [
-    "dist",
-    ".claude/skills",
-    "README.md",
-    "LICENSE",
-    "DESIGN.md"
-  ]
+  }
 }

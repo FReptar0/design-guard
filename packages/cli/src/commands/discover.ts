@@ -1,10 +1,7 @@
 import { writeFileSync, existsSync } from 'node:fs';
 import { log } from '../utils/logger.js';
-import { researchBusiness } from '../research/business-researcher.js';
-import { synthesizeDesign } from '../research/design-synthesizer.js';
-import { cacheResearch } from '../research/research-cache.js';
-import { formatDesignQualityReport } from '../utils/design-validator.js';
-import type { BusinessBrief } from '../research/types.js';
+import { researchBusiness, synthesizeDesign, cacheResearch, formatDesignQualityReport } from '@design-guard/core';
+import type { BusinessBrief } from '@design-guard/core';
 
 interface DiscoverOptions {
   force?: boolean;
@@ -50,7 +47,7 @@ export async function runDiscover(briefText: string, opts: DiscoverOptions): Pro
   if (opts.noResearch) {
     // Fall back to static template
     log.info('Research disabled. Using industry presets...');
-    const { generateDesignMdTemplate } = await import('../templates/design-md.js');
+    const { generateDesignMdTemplate } = await import('@design-guard/core');
     const content = generateDesignMdTemplate(brief);
     writeFileSync('DESIGN.md', content);
     log.success(`DESIGN.md created for ${brief.companyName} (preset mode)`);
