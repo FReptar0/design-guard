@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Design Guard — a design intelligence CLI that lints AI-generated HTML against your design system. 238 tests, 13 commands, 8 lint rules. Free and open source.">
+  <title>Design Guard — Lint AI-Generated Design</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --guard-purple: #6C5CE7;
+      --neon-cyan: #00CEC9;
+      --hot-pink: #FD79A8;
+      --void-black: #0F0F1A;
+      --cloud-white: #E8E8F0;
+      --pure-white: #FFFFFF;
+      --smoke: #2D2D3F;
+      --glass-white: rgba(255,255,255,0.05);
+      --code-bg: #1E1E2E;
+      --comment: #636381;
+      --max-width: 1140px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: "DM Sans", sans-serif;
+      background: var(--void-black);
+      color: var(--cloud-white);
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3 {
+      font-family: "Space Grotesk", sans-serif;
+      color: var(--pure-white);
+    }
+
+    h1 { font-size: 3.5rem; font-weight: 700; line-height: 1.1; }
+    h2 { font-size: 2.25rem; font-weight: 700; line-height: 1.15; }
+    h3 { font-size: 1.5rem; font-weight: 600; line-height: 1.3; }
+
+    a { color: var(--neon-cyan); text-decoration: none; transition: opacity 0.2s; }
+    a:hover { opacity: 0.85; }
+
+    code, .mono { font-family: "JetBrains Mono", monospace; }
+
+    .container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
+
+    /* ---- NAV ---- */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15,15,26,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--smoke);
+      padding: 16px 0;
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--pure-white);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-brand svg { width: 24px; height: 24px; }
+    .nav-links { display: flex; gap: 32px; align-items: center; list-style: none; }
+    .nav-links a {
+      color: var(--cloud-white);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--neon-cyan); opacity: 1; }
+    .nav-cta {
+      background: var(--guard-purple);
+      color: var(--pure-white) !important;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: box-shadow 0.2s;
+    }
+    .nav-cta:hover { box-shadow: 0 0 20px rgba(108,92,231,0.4); opacity: 1; }
+
+    /* ---- HERO ---- */
+    .hero {
+      padding: 96px 0 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: -120px;
+      right: -80px;
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(circle, rgba(108,92,231,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    .hero-text { position: relative; z-index: 1; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--glass-white);
+      border: 1px solid var(--smoke);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 0.875rem;
+      font-weight: 400;
+      color: var(--cloud-white);
+      margin-bottom: 24px;
+    }
+    .hero-badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--neon-cyan);
+    }
+    .hero h1 { margin-bottom: 24px; }
+    .hero h1 .accent { color: var(--guard-purple); }
+    .hero p {
+      font-size: 1.125rem;
+      line-height: 1.7;
+      max-width: 480px;
+      margin-bottom: 32px;
+    }
+    .hero-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--guard-purple);
+      color: var(--pure-white);
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-family: "DM Sans", sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+    .btn-primary:hover { box-shadow: 0 0 24px rgba(108,92,231,0.4); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--guard-purple);
+      padding: 14px 28px;
+      border-radius: 8px;
+      border: 1px solid var(--guard-purple);
+      font-family: "DM Sans", sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-secondary:hover {
+      background: var(--guard-purple);
+      color: var(--pure-white);
+    }
+
+    /* Terminal mockup */
+    .terminal {
+      background: var(--code-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--smoke);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+    }
+    .terminal-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--smoke);
+    }
+    .terminal-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .terminal-dot.red { background: #FF5F57; }
+    .terminal-dot.yellow { background: #FEBC2E; }
+    .terminal-dot.green { background: #28C840; }
+    .terminal-body { padding: 16px; overflow-x: auto; }
+    .terminal-body .prompt { color: var(--neon-cyan); }
+    .terminal-body .cmd { color: var(--cloud-white); }
+    .terminal-body .flag { color: var(--guard-purple); }
+    .terminal-body .comment { color: var(--comment); }
+    .terminal-body .success { color: #28C840; }
+    .terminal-body .error { color: var(--hot-pink); }
+    .terminal-body .line { margin-bottom: 4px; }
+    .terminal-body .blank { height: 12px; }
+
+    /* ---- STATS STRIP ---- */
+    .stats {
+      padding: 48px 0;
+      border-top: 1px solid var(--smoke);
+      border-bottom: 1px solid var(--smoke);
+    }
+    .stats-grid {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 32px;
+    }
+    .stat {
+      text-align: center;
+      flex: 1;
+      min-width: 120px;
+    }
+    .stat-number {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--pure-white);
+    }
+    .stat-number .highlight { color: var(--guard-purple); }
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--comment);
+      margin-top: 4px;
+    }
+
+    /* ---- FEATURES (asymmetric bento) ---- */
+    .features { padding: 80px 0; }
+    .features h2 { margin-bottom: 16px; }
+    .features > .container > p {
+      color: var(--cloud-white);
+      font-size: 1.125rem;
+      max-width: 560px;
+      margin-bottom: 48px;
+    }
+    .bento {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 24px;
+    }
+    .bento-card {
+      background: var(--glass-white);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--smoke);
+      border-radius: 12px;
+      padding: 24px;
+      transition: border-color 0.3s;
+    }
+    .bento-card:hover { border-color: rgba(108,92,231,0.3); }
+    .bento-card.wide { grid-column: span 2; }
+    .bento-card.tall { grid-row: span 2; }
+    .bento-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      color: var(--guard-purple);
+    }
+    .bento-card h3 { margin-bottom: 8px; }
+    .bento-card p { font-size: 0.875rem; line-height: 1.5; }
+    .bento-card .code-snippet {
+      margin-top: 16px;
+      background: var(--code-bg);
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    /* ---- HOW IT WORKS (pipeline) ---- */
+    .pipeline { padding: 80px 0; }
+    .pipeline h2 { margin-bottom: 48px; }
+    .pipeline-steps {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      position: relative;
+    }
+    .pipeline-steps::before {
+      content: "";
+      position: absolute;
+      top: 36px;
+      left: 36px;
+      right: 36px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--guard-purple), var(--neon-cyan));
+      z-index: 0;
+    }
+    .step {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .step-num {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--code-bg);
+      border: 2px solid var(--guard-purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      font-size: 1.125rem;
+      color: var(--guard-purple);
+    }
+    .step h3 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+    .step p {
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: var(--comment);
+    }
+    .step .mono-tag {
+      display: inline-block;
+      background: var(--code-bg);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.75rem;
+      color: var(--neon-cyan);
+      margin-top: 8px;
+    }
+
+    /* ---- COMMANDS ---- */
+    .commands { padding: 80px 0; }
+    .commands h2 { margin-bottom: 16px; }
+    .commands > .container > p {
+      color: var(--cloud-white);
+      max-width: 520px;
+      margin-bottom: 48px;
+    }
+    .cmd-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    .cmd-list { list-style: none; }
+    .cmd-list li {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--smoke);
+      font-size: 0.875rem;
+    }
+    .cmd-list li:last-child { border-bottom: none; }
+    .cmd-name {
+      font-family: "JetBrains Mono", monospace;
+      color: var(--neon-cyan);
+      min-width: 160px;
+      font-size: 0.9rem;
+    }
+    .cmd-desc { color: var(--cloud-white); }
+
+    .skills-card {
+      background: var(--glass-white);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--smoke);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .skills-card h3 { margin-bottom: 16px; }
+    .skills-card .skill-row {
+      display: flex;
+      gap: 12px;
+      align-items: baseline;
+      padding: 8px 0;
+    }
+    .skill-name {
+      font-family: "JetBrains Mono", monospace;
+      color: var(--guard-purple);
+      font-size: 0.9rem;
+      min-width: 140px;
+    }
+    .skill-desc { font-size: 0.875rem; }
+
+    /* ---- INSTALL CTA ---- */
+    .install { padding: 80px 0; text-align: center; }
+    .install h2 { margin-bottom: 16px; }
+    .install > .container > p {
+      max-width: 480px;
+      margin: 0 auto 32px;
+    }
+    .install-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--code-bg);
+      border: 1px solid var(--smoke);
+      border-radius: 8px;
+      padding: 14px 24px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: var(--neon-cyan);
+      cursor: pointer;
+      transition: border-color 0.2s;
+      margin-bottom: 24px;
+    }
+    .install-box:hover { border-color: var(--guard-purple); }
+    .install-box svg { color: var(--comment); width: 18px; height: 18px; }
+    .install-or {
+      display: block;
+      font-size: 0.875rem;
+      color: var(--comment);
+      margin-bottom: 16px;
+    }
+    .install-alt {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.9rem;
+      color: var(--cloud-white);
+    }
+
+    /* ---- FOOTER ---- */
+    footer {
+      padding: 48px 0;
+      border-top: 1px solid var(--smoke);
+    }
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-brand {
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 600;
+      color: var(--cloud-white);
+      font-size: 0.875rem;
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+    .footer-links a {
+      font-size: 0.875rem;
+      color: var(--comment);
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--neon-cyan); }
+    .footer-copy {
+      font-size: 0.75rem;
+      color: var(--comment);
+      width: 100%;
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 1024px) {
+      h1 { font-size: 2.5rem; }
+      .hero-layout { grid-template-columns: 1fr; gap: 48px; }
+      .pipeline-steps { grid-template-columns: repeat(3, 1fr); }
+      .pipeline-steps::before { display: none; }
+      .cmd-layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      h1 { font-size: 2rem; }
+      h2 { font-size: 1.75rem; }
+      .bento { grid-template-columns: 1fr; }
+      .bento-card.wide { grid-column: span 1; }
+      .bento-card.tall { grid-row: span 1; }
+      .pipeline-steps { grid-template-columns: 1fr 1fr; }
+      .nav-links { gap: 16px; }
+      section { padding: 48px 0; }
+      .hero { padding: 48px 0; }
+    }
+    @media (max-width: 640px) {
+      .pipeline-steps { grid-template-columns: 1fr; }
+      .stats-grid { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="container nav-inner">
+      <div class="nav-brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Design Guard
+      </div>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#commands">Commands</a></li>
+        <li><a href="https://github.com/FReptar0/design-guard" class="nav-cta">View on GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="container hero-layout">
+      <div class="hero-text">
+        <div class="hero-badge">
+          <span class="dot"></span>
+          Open source &middot; MIT Licensed
+        </div>
+        <h1>Stop shipping <span class="accent">AI slop.</span></h1>
+        <p>Design Guard is a design intelligence CLI that lints AI-generated HTML against your design system. It catches off-palette colors, default fonts, heading hierarchy issues, and accessibility gaps before they reach production.</p>
+        <div class="hero-actions">
+          <a href="#install" class="btn-primary">Quick Start</a>
+          <a href="#features" class="btn-secondary">See What It Catches</a>
+        </div>
+      </div>
+      <div class="terminal" role="img" aria-label="Terminal showing Design Guard lint output catching 6 off-palette colors and scoring 0 out of 100">
+        <div class="terminal-bar">
+          <span class="terminal-dot red"></span>
+          <span class="terminal-dot yellow"></span>
+          <span class="terminal-dot green"></span>
+        </div>
+        <div class="terminal-body">
+          <div class="line"><span class="prompt">$</span> <span class="cmd">dg lint</span> <span class="flag">landing.html</span> <span class="flag">--design-system</span> <span class="cmd">DESIGN.md</span></div>
+          <div class="blank"></div>
+          <div class="line"><span class="comment"># DESIGN.md Quality Score: 90/100</span></div>
+          <div class="blank"></div>
+          <div class="line"><span class="error">&#x2715; landing.html &mdash; Score: 34/100</span></div>
+          <div class="line">  <span class="error">&#x2715; error</span>  <span class="cmd">6 off-palette colors found</span></div>
+          <div class="line">  <span class="flag">&#x25B3; warn</span>   <span class="cmd">Heading skip: h2 &rarr; h4</span></div>
+          <div class="line">  <span class="flag">&#x25B3; warn</span>   <span class="cmd">Detected "Inter" &mdash; AI default font</span></div>
+          <div class="line">  <span class="flag">&#x25B3; warn</span>   <span class="cmd">4-icon grid &mdash; AI layout pattern</span></div>
+          <div class="line">  <span class="flag">&#x25B3; warn</span>   <span class="cmd">Div-to-semantic ratio 84:9</span></div>
+          <div class="blank"></div>
+          <div class="line"><span class="comment"># Fix &rarr; re-lint &rarr; ship with confidence</span></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- STATS -->
+    <section class="stats" aria-label="Project statistics">
+      <div class="container stats-grid">
+        <div class="stat">
+          <div class="stat-number">238</div>
+          <div class="stat-label">Tests passing</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">13</div>
+          <div class="stat-label">CLI commands</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">8</div>
+          <div class="stat-label">Lint rules</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">7</div>
+          <div class="stat-label">Claude Code skills</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">3</div>
+          <div class="stat-label">Output frameworks</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES (asymmetric bento) -->
+    <section class="features" id="features" aria-label="Features">
+      <div class="container">
+        <h2>What Design Guard Catches</h2>
+        <p>Eight modular lint rules detect the patterns that make AI-generated sites look like AI-generated sites.</p>
+        <div class="bento">
+          <!-- Large card spanning 2 columns -->
+          <article class="bento-card wide">
+            <div class="bento-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            </div>
+            <h3>Anti-Slop Validation</h3>
+            <p>Scores HTML 0-100 against your DESIGN.md. Catches off-palette colors, AI-default fonts like Inter and Poppins, purple-to-blue gradients, uniform icon grids, div soup, duplicate CTAs, heading hierarchy skips, and missing accessibility attributes. Every rule maps to a specific symptom of AI-generated design.</p>
+          </article>
+
+          <!-- Tall card -->
+          <article class="bento-card tall">
+            <div class="bento-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <h3>Design Intelligence Agent</h3>
+            <p>Before generating a single pixel, the <code>dg discover</code> command researches your business model, scrapes your existing site, analyzes 2-3 competitors, and scores its own confidence. It understands that a grocery chain needs a store locator, not a shopping cart.</p>
+            <p style="margin-top: 12px; font-size: 0.875rem;">Generates an 8-section DESIGN.md with business context baked in: visual theme, color palette, typography, spacing, components, iconography, imagery, and do's/don'ts.</p>
+          </article>
+
+          <!-- Regular card -->
+          <article class="bento-card">
+            <div class="bento-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <h3>Multi-Generator Support</h3>
+            <p>Works with Google Stitch MCP and Claude Direct. Generate screens through either pipeline and lint the output the same way. Not locked to one AI vendor.</p>
+          </article>
+
+          <!-- Regular card -->
+          <article class="bento-card">
+            <div class="bento-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <h3>Three Output Frameworks</h3>
+            <p>Export to Static HTML, Astro, or Next.js App Router. Each build includes a Design Guard signature comment and shared navigation across pages.</p>
+          </article>
+
+          <!-- Wide card with code snippet -->
+          <article class="bento-card wide">
+            <div class="bento-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            </div>
+            <h3>W3C DTCG Token Bridge</h3>
+            <p>Import and export design tokens in the W3C Design Tokens Community Group format. Bridge your DESIGN.md to standard tooling or pull tokens from your existing design system into Design Guard.</p>
+            <div class="code-snippet mono">
+              <span class="prompt">$</span> <span style="color: var(--cloud-white)">dg tokens</span> <span style="color: var(--guard-purple)">--export</span> <span style="color: var(--cloud-white)">tokens.json</span><br>
+              <span class="comment"># Exports DESIGN.md as W3C DTCG tokens</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="pipeline" id="how-it-works" aria-label="How it works">
+      <div class="container">
+        <h2>The Pipeline</h2>
+        <div class="pipeline-steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <h3>Research</h3>
+            <p>Investigate the business model, audience, and competitors</p>
+            <span class="mono-tag">dg discover</span>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <h3>Design</h3>
+            <p>Generate an 8-section DESIGN.md with business context</p>
+            <span class="mono-tag">dg design</span>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <h3>Generate</h3>
+            <p>Create screens via Stitch MCP with guided prompts</p>
+            <span class="mono-tag">dg generate</span>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <h3>Lint</h3>
+            <p>Score output 0-100, catch every AI-default pattern</p>
+            <span class="mono-tag">dg lint</span>
+          </div>
+          <div class="step">
+            <div class="step-num">5</div>
+            <h3>Build</h3>
+            <p>Export to Static HTML, Astro, or Next.js</p>
+            <span class="mono-tag">dg build</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMANDS -->
+    <section class="commands" id="commands" aria-label="CLI commands and Claude Code skills">
+      <div class="container">
+        <h2>13 Commands. 7 Skills.</h2>
+        <p>Everything from research to deployment, accessible from the terminal or from Claude Code as slash commands.</p>
+        <div class="cmd-layout">
+          <div>
+            <h3 style="margin-bottom: 16px;">CLI Commands</h3>
+            <ul class="cmd-list">
+              <li><span class="cmd-name">dg init</span> <span class="cmd-desc">Setup project, auth, and MCP config</span></li>
+              <li><span class="cmd-name">dg discover</span> <span class="cmd-desc">Research business + generate tailored DESIGN.md</span></li>
+              <li><span class="cmd-name">dg design</span> <span class="cmd-desc">Generate DESIGN.md from a brand brief</span></li>
+              <li><span class="cmd-name">dg generate</span> <span class="cmd-desc">Create a screen via Stitch or Claude</span></li>
+              <li><span class="cmd-name">dg lint</span> <span class="cmd-desc">Score HTML against your design system</span></li>
+              <li><span class="cmd-name">dg build</span> <span class="cmd-desc">Export to Static, Astro, or Next.js</span></li>
+              <li><span class="cmd-name">dg preview</span> <span class="cmd-desc">Open screens in the browser</span></li>
+              <li><span class="cmd-name">dg sync</span> <span class="cmd-desc">Pull screens from a Stitch project</span></li>
+              <li><span class="cmd-name">dg research</span> <span class="cmd-desc">Check for Stitch API updates</span></li>
+              <li><span class="cmd-name">dg workflow</span> <span class="cmd-desc">Guided multi-step workflows</span></li>
+              <li><span class="cmd-name">dg quota</span> <span class="cmd-desc">View generation quota usage</span></li>
+              <li><span class="cmd-name">dg tokens</span> <span class="cmd-desc">W3C DTCG token import/export</span></li>
+              <li><span class="cmd-name">dg tui</span> <span class="cmd-desc">Launch interactive terminal UI</span></li>
+            </ul>
+          </div>
+          <aside class="skills-card">
+            <h3>Claude Code Skills</h3>
+            <div class="skill-row"><span class="skill-name">/dg-discover</span> <span class="skill-desc">Research + tailored DESIGN.md</span></div>
+            <div class="skill-row"><span class="skill-name">/dg-design</span> <span class="skill-desc">Generate design system</span></div>
+            <div class="skill-row"><span class="skill-name">/dg-generate</span> <span class="skill-desc">Create screens with guardrails</span></div>
+            <div class="skill-row"><span class="skill-name">/dg-build</span> <span class="skill-desc">Build and export site</span></div>
+            <div class="skill-row"><span class="skill-name">/dg-preview</span> <span class="skill-desc">Preview screens inline</span></div>
+            <div class="skill-row"><span class="skill-name">/dg-research</span> <span class="skill-desc">Check for Stitch updates</span></div>
+            <div class="skill-row"><span class="skill-name">/dg-sync</span> <span class="skill-desc">Sync from Stitch project</span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSTALL CTA -->
+    <section class="install" id="install" aria-label="Installation">
+      <div class="container">
+        <h2>Start Linting in 30 Seconds</h2>
+        <p>Install globally, point it at your HTML, and get a score. No config needed for basic linting.</p>
+        <div class="install-box" role="button" aria-label="Copy install command: npm i -g design-guard" tabindex="0">
+          <span>npm i -g design-guard</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </div>
+        <span class="install-or">or use the core library in your own tools</span>
+        <div class="install-alt">
+          <code>npm i @design-guard/core</code>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container footer-inner">
+      <span class="footer-brand">Design Guard</span>
+      <ul class="footer-links">
+        <li><a href="https://github.com/FReptar0/design-guard">GitHub</a></li>
+        <li><a href="https://www.npmjs.com/package/design-guard">npm</a></li>
+        <li><a href="https://fernandomemije.dev">Author</a></li>
+        <li><a href="https://github.com/FReptar0/design-guard/blob/main/LICENSE">MIT License</a></li>
+      </ul>
+      <p class="footer-copy">Built by Fernando Rodriguez Memije. Design Guard is free and open source.</p>
+    </div>
+  </footer>
+
+<!-- Built with Design Guard -->
+</body>
+</html>

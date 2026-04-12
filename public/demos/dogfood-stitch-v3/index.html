@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Design Guard — AI Design Intelligence</title>
+<meta name="description" content="Design Guard is an open-source CLI and library that validates AI-generated web designs against design systems. Lint for AI slop, generate via Google Stitch MCP, and build production sites." />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&amp;family=DM+Sans:ital,wght@0,400;0,500;1,400&amp;family=JetBrains+Mono&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#6C5CE7",
+              secondary: "#00CEC9",
+              tertiary: "#FD79A8",
+              surface: "#0F0F1A",
+              "on-surface": "#E8E8F0",
+              muted: "#2D2D3F",
+              glass: "rgba(255,255,255,0.05)"
+            },
+            borderRadius: {
+              "DEFAULT": "0.5rem",
+              "lg": "1rem",
+              "xl": "1.5rem",
+              "full": "9999px"
+            },
+            fontFamily: {
+              headline: ["Space Grotesk", "sans-serif"],
+              body: ["DM Sans", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      body {
+        background-color: #0F0F1A;
+        color: #E8E8F0;
+        font-family: 'DM Sans', sans-serif;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(12px);
+        border: 1px solid #2D2D3F;
+      }
+      .terminal-header {
+        background: #2D2D3F;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+      }
+    </style>
+</head>
+<body class="antialiased">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-[#0F0F1A]/80 backdrop-blur-md border-b border-[#2D2D3F]">
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+<div class="text-xl font-bold text-white tracking-tighter font-headline">
+                Design Guard
+            </div>
+<div class="hidden md:flex items-center gap-8 font-headline font-bold text-sm tracking-tight">
+<a class="text-[#E8E8F0] hover:text-[#00CEC9] transition-colors" href="#">Docs</a>
+<a class="text-[#E8E8F0] hover:text-[#00CEC9] transition-colors" href="#">CLI</a>
+<a class="text-[#E8E8F0] hover:text-[#00CEC9] transition-colors" href="#">Skills</a>
+<a class="text-[#6C5CE7] border-b-2 border-[#6C5CE7] pb-1" href="#">Core</a>
+</div>
+<button class="bg-[#6C5CE7] text-white px-5 py-2 rounded font-headline font-bold text-sm hover:opacity-90 active:scale-95 transition-all">
+                Install CLI
+            </button>
+</div>
+</nav>
+<main class="pt-24">
+<!-- Hero Section -->
+<section class="max-w-7xl mx-auto px-6 py-20 text-center">
+<h1 class="font-headline text-5xl md:text-7xl mb-6 leading-[1.1] text-white">
+                Design websites with AI.<br/>Ship them with <span class="text-primary">confidence.</span>
+</h1>
+<p class="text-xl text-on-surface/80 max-w-2xl mx-auto mb-10 font-body">
+                Design Guard is the intelligence layer for AI-generated UI. A complete design-to-deploy pipeline that lints, validates, and builds production-ready code.
+            </p>
+<div class="flex flex-col md:flex-row gap-4 justify-center mb-20">
+<button class="bg-primary text-white px-8 py-4 rounded-lg font-headline font-bold shadow-[0_0_20px_rgba(108,92,231,0.3)] hover:shadow-[0_0_30px_rgba(108,92,231,0.5)] transition-all">
+                    Install from npm
+                </button>
+<button class="border border-muted text-white px-8 py-4 rounded-lg font-headline font-bold hover:bg-white/5 transition-all">
+                    View on GitHub
+                </button>
+</div>
+<!-- Terminal Mockup -->
+<figure class="max-w-4xl mx-auto glass-card rounded-xl overflow-hidden shadow-2xl" role="img" aria-label="Design Guard CLI session showing discover, generate, and lint commands">
+<header class="terminal-header px-4 py-2 flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-[#FD79A8]" aria-hidden="true"></span>
+<span class="w-3 h-3 rounded-full bg-[#E8E8F0]" aria-hidden="true"></span>
+<span class="w-3 h-3 rounded-full bg-[#00CEC9]" aria-hidden="true"></span>
+<span class="ml-4 text-xs font-mono text-on-surface/40">zsh — dg cli</span>
+</header>
+<pre class="bg-[#1E1E2E] p-6 text-left font-mono text-sm leading-relaxed min-h-[300px]"><code><span class="text-secondary">$</span> <span class="text-white">dg discover</span>
+  <span class="text-on-surface/60">› Identifying brand anchors and design tokens...</span>
+  <span class="text-secondary">✔ Anchors localized: 14 constants identified.</span>
+
+<span class="text-secondary">$</span> <span class="text-white">dg generate --theme cyberpunk</span>
+  <span class="text-on-surface/60">› Orchestrating LLM request pipeline...</span>
+  <span class="text-tertiary">⚡ Core engine building visual shell...</span>
+
+<span class="text-secondary">$</span> <span class="text-white">dg lint</span>
+  <span class="text-secondary">PASS</span> <span class="text-on-surface/60">./components/Hero.tsx</span>
+  <span class="text-secondary">PASS</span> <span class="text-on-surface/60">./tokens/colors.json</span>
+  <span class="text-white">Score: <span class="text-secondary">94/100</span> — Ready for deployment.</span></code></pre>
+</figure>
+<!-- Stats Strip -->
+<aside class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16 max-w-4xl mx-auto border-t border-muted pt-12" aria-label="Project statistics">
+<figure>
+<figcaption class="text-2xl font-headline font-bold text-white">13</figcaption>
+<span class="text-xs text-on-surface/50 font-mono">CLI commands</span>
+</figure>
+<figure>
+<figcaption class="text-2xl font-headline font-bold text-white">238</figcaption>
+<span class="text-xs text-on-surface/50 font-mono">Tests</span>
+</figure>
+<figure>
+<figcaption class="text-2xl font-headline font-bold text-white">8</figcaption>
+<span class="text-xs text-on-surface/50 font-mono">Lint rules</span>
+</figure>
+<figure>
+<figcaption class="text-2xl font-headline font-bold text-white">3</figcaption>
+<span class="text-xs text-on-surface/50 font-mono">Frameworks</span>
+</figure>
+</aside>
+</section>
+<!-- Problem Statement -->
+<section class="max-w-7xl mx-auto px-6 py-32 grid md:grid-cols-2 gap-20 items-center">
+<div>
+<h2 class="font-headline text-4xl mb-6 text-white leading-tight">AI design tools<br/>generate <span class="text-tertiary">slop.</span></h2>
+<div class="space-y-4 text-on-surface/70 font-body text-lg">
+<p>Current LLMs generate visuals that "look" like websites but fail fundamental engineering checks. They hallucinate tokens, ignore accessibility, and break responsive patterns.</p>
+<p>Design Guard acts as the validator between AI creativity and production reality, ensuring every pixel generated is intentional and standards-compliant.</p>
+</div>
+</div>
+<div class="relative">
+<div class="absolute -inset-4 bg-tertiary/10 blur-3xl rounded-full"></div>
+<article class="space-y-6 relative">
+<!-- Fail Card -->
+<article class="bg-muted/50 p-6 rounded-lg border border-red-500/30">
+<div class="flex justify-between items-center mb-4">
+<span class="font-mono text-xs text-red-500 bg-red-500/10 px-2 py-1 rounded">UNVALIDATED AI OUTPUT</span>
+<span class="font-mono text-red-500">23/100</span>
+</div>
+<div class="h-2 w-full bg-red-500/20 rounded-full mb-4">
+<div class="h-full bg-red-500 w-[23%] rounded-full"></div>
+</div>
+<ul class="space-y-1 font-mono text-[10px] text-on-surface/40 list-none">
+<li>✖ Contrast failure on primary CTA</li>
+<li>✖ Random hex colors used instead of tokens</li>
+<li>✖ Layout shift on mobile viewport</li>
+</ul>
+</article>
+<!-- Pass Card -->
+<article class="bg-muted/50 p-6 rounded-lg border border-secondary/30">
+<div class="flex justify-between items-center mb-4">
+<span class="font-mono text-xs text-secondary bg-secondary/10 px-2 py-1 rounded">DESIGN GUARD OPTIMIZED</span>
+<span class="font-mono text-secondary">94/100</span>
+</div>
+<div class="h-2 w-full bg-secondary/20 rounded-full mb-4">
+<div class="h-full bg-secondary w-[94%] rounded-full"></div>
+</div>
+<ul class="space-y-1 font-mono text-[10px] text-on-surface/40 list-none">
+<li>✔ 100% Token Compliance</li>
+<li>✔ WCAG 2.1 AA Certified</li>
+<li>✔ DTCG Bridge Validated</li>
+</ul>
+</article>
+</article>
+</div>
+</section>
+<!-- Features Bento -->
+<section class="max-w-7xl mx-auto px-6 py-32">
+<h2 class="font-headline text-3xl mb-12 text-white">System Capabilities</h2>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Large Card -->
+<article class="md:col-span-7 glass-card p-8 rounded-xl group relative overflow-hidden">
+<div class="relative z-10">
+<span class="material-symbols-outlined text-primary mb-4 text-3xl" data-icon="neurology">neurology</span>
+<h3 class="font-headline text-2xl text-white mb-2">Design Intelligence Agent</h3>
+<p class="text-on-surface/60">An autonomous agent that researches brand identity and market context before generating a single line of CSS. It builds a "knowledge anchor" that keeps the AI grounded.</p>
+</div>
+<div class="absolute right-[-10%] bottom-[-10%] opacity-20 group-hover:opacity-40 transition-opacity">
+<img class="w-80 h-80 object-cover rounded-full" alt="Abstract neural network visualization with neon nodes and glowing purple connections" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCunV7etllNmZDPKvFCGBePBaHX8iF713409tqP69CEKlT9AufZyMhQyIqA1ZKTbOXiSuBVj8R4y2drW1csSdu6siQoNXA1ArQPqyE3Y1E6KrQVHR_tZTH_pG9UNcWudx_XmtMMLdD05P87G_7ugeKL8ZJ6lmqmh4I3zOEqV7Nw0Rutb0aBX828yefs21icmO9Mgb4w_JS5cZzeIzEbIztKGgaUS0pkxo1_5lFHplHkTYDkGB0X8a0eiQbDAneRemHodUGG05enN-p3"/>
+</div>
+</article>
+<!-- Card -->
+<article class="md:col-span-5 glass-card p-8 rounded-xl border-t-tertiary/20 border-t-2">
+<span class="material-symbols-outlined text-tertiary mb-4 text-3xl" data-icon="rule">rule</span>
+<h3 class="font-headline text-xl text-white mb-2">Anti-Slop Linter</h3>
+<p class="text-sm text-on-surface/60">8 modular rules that audit AI outputs for hallucinated components and non-semantic HTML. Get a score out of 100.</p>
+</article>
+<!-- Card -->
+<article class="md:col-span-4 glass-card p-8 rounded-xl">
+<span class="material-symbols-outlined text-secondary mb-4 text-3xl" data-icon="hub">hub</span>
+<h3 class="font-headline text-xl text-white mb-2">Multi-Generator</h3>
+<p class="text-sm text-on-surface/60">Native support for Google Stitch MCP and Claude Direct orchestrations. Switch models without losing design context.</p>
+</article>
+<!-- Card -->
+<article class="md:col-span-4 glass-card p-8 rounded-xl">
+<span class="material-symbols-outlined text-white/40 mb-4 text-3xl" data-icon="account_tree">account_tree</span>
+<h3 class="font-headline text-xl text-white mb-2">DTCG Token Bridge</h3>
+<p class="text-sm text-on-surface/60">Automatic mapping of Figma/W3C design tokens to Tailwind CSS and CSS Variables. No manual re-coding.</p>
+</article>
+<!-- Card -->
+<article class="md:col-span-4 glass-card p-8 rounded-xl">
+<span class="material-symbols-outlined text-primary mb-4 text-3xl" data-icon="deployed_code">deployed_code</span>
+<h3 class="font-headline text-xl text-white mb-2">Framework Build</h3>
+<p class="text-sm text-on-surface/60">One-click export to Astro, Next.js 14+, or optimized static HTML. Zero-dependency runtime.</p>
+</article>
+</div>
+</section>
+<!-- How It Works -->
+<section class="max-w-7xl mx-auto px-6 py-32 overflow-hidden">
+<h2 class="font-headline text-3xl mb-16 text-center text-white">The Design-to-Deploy Pipeline</h2>
+<div class="relative flex flex-col md:flex-row gap-6">
+<!-- Connector Line -->
+<div class="hidden md:block absolute top-1/2 left-0 w-full h-[1px] bg-muted -translate-y-1/2 -z-10"></div>
+<!-- Step 1 -->
+<article class="flex-1 glass-card p-6 rounded-xl border-b-2 border-b-secondary">
+<div class="text-secondary font-mono text-xs mb-2">STEP 01</div>
+<h3 class="font-headline text-lg text-white mb-3">Research</h3>
+<p class="text-xs text-on-surface/60 mb-4">Analyze brand anchors and intent.</p>
+<div class="bg-black/40 p-2 rounded font-mono text-[10px] text-secondary">dg discover</div>
+</article>
+<!-- Step 2 -->
+<article class="flex-1 glass-card p-6 rounded-xl border-b-2 border-b-primary">
+<div class="text-primary font-mono text-xs mb-2">STEP 02</div>
+<h3 class="font-headline text-lg text-white mb-3">Design</h3>
+<p class="text-xs text-on-surface/60 mb-4">Generate themed UI shells via LLM.</p>
+<div class="bg-black/40 p-2 rounded font-mono text-[10px] text-primary">dg design</div>
+</article>
+<!-- Step 3 -->
+<article class="flex-1 glass-card p-6 rounded-xl border-b-2 border-b-tertiary">
+<div class="text-tertiary font-mono text-xs mb-2">STEP 03</div>
+<h3 class="font-headline text-lg text-white mb-3">Generate</h3>
+<p class="text-xs text-on-surface/60 mb-4">Produce component-driven code.</p>
+<div class="bg-black/40 p-2 rounded font-mono text-[10px] text-tertiary">dg generate</div>
+</article>
+<!-- Step 4 -->
+<article class="flex-1 glass-card p-6 rounded-xl border-b-2 border-b-white">
+<div class="text-white/50 font-mono text-xs mb-2">STEP 04</div>
+<h3 class="font-headline text-lg text-white mb-3">Lint</h3>
+<p class="text-xs text-on-surface/60 mb-4">Validate against design rules.</p>
+<div class="bg-black/40 p-2 rounded font-mono text-[10px] text-white">dg lint</div>
+</article>
+<!-- Step 5 -->
+<article class="flex-1 glass-card p-6 rounded-xl border-b-2 border-b-secondary">
+<div class="text-secondary font-mono text-xs mb-2">STEP 05</div>
+<h3 class="font-headline text-lg text-white mb-3">Build</h3>
+<p class="text-xs text-on-surface/60 mb-4">Export to production framework.</p>
+<div class="bg-black/40 p-2 rounded font-mono text-[10px] text-secondary">dg build</div>
+</article>
+</div>
+</section>
+<!-- Commands Showcase -->
+<section class="max-w-7xl mx-auto px-6 py-32 grid md:grid-cols-2 gap-12">
+<article class="bg-muted/30 rounded-xl p-8 border border-muted">
+<h3 class="font-headline text-xl text-white mb-6">CLI Commands</h3>
+<ul class="space-y-4 font-mono text-sm">
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg init</span> <span class="text-on-surface/40">Setup project and auth</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg discover</span> <span class="text-on-surface/40">Research business + DESIGN.md</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg design</span> <span class="text-on-surface/40">Generate design system</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg generate</span> <span class="text-on-surface/40">Create screen via Stitch</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg lint</span> <span class="text-on-surface/40">Score HTML 0-100</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg build</span> <span class="text-on-surface/40">Export to framework</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg preview</span> <span class="text-on-surface/40">Open in browser</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg sync</span> <span class="text-on-surface/40">Pull from Stitch project</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg research</span> <span class="text-on-surface/40">Check for API updates</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg tokens</span> <span class="text-on-surface/40">Manage design tokens</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg tui</span> <span class="text-on-surface/40">Interactive terminal UI</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg workflow</span> <span class="text-on-surface/40">Guided step-by-step</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-primary">dg quota</span> <span class="text-on-surface/40">Generation usage</span></li>
+</ul>
+</article>
+<article class="bg-muted/30 rounded-xl p-8 border border-muted">
+<h3 class="font-headline text-xl text-white mb-6">Claude Code Skills</h3>
+<ul class="space-y-4 font-mono text-sm">
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-secondary">/dg-discover</span> <span class="text-on-surface/40">Research + design system</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-secondary">/dg-design</span> <span class="text-on-surface/40">Generate DESIGN.md</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-secondary">/dg-generate</span> <span class="text-on-surface/40">Create screen via Stitch</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-secondary">/dg-build</span> <span class="text-on-surface/40">Export to framework</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-secondary">/dg-preview</span> <span class="text-on-surface/40">View screen inline</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-secondary">/dg-research</span> <span class="text-on-surface/40">Check for Stitch updates</span></li>
+<li class="flex items-center gap-4 text-on-surface/80"><span class="text-secondary">/dg-sync</span> <span class="text-on-surface/40">Pull from Stitch project</span></li>
+</ul>
+</article>
+</section>
+<!-- Install CTA -->
+<section class="max-w-4xl mx-auto px-6 py-40 text-center">
+<h2 class="font-headline text-4xl mb-12 text-white">Start building with precision.</h2>
+<div class="space-y-6">
+<div class="relative group">
+<div class="absolute -inset-1 bg-primary/20 blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 rounded-lg"></div>
+<div class="relative flex justify-between items-center bg-[#1E1E2E] p-6 rounded-lg font-mono text-lg text-primary border border-primary/30">
+<code>npm i -g design-guard</code>
+<span class="material-symbols-outlined cursor-pointer hover:text-white" data-icon="content_copy">content_copy</span>
+</div>
+</div>
+<div class="relative group">
+<div class="relative flex justify-between items-center bg-[#1E1E2E] p-6 rounded-lg font-mono text-lg text-white border border-muted">
+<code>npm i @design-guard/core</code>
+<span class="material-symbols-outlined cursor-pointer hover:text-on-surface/40 hover:text-white" data-icon="content_copy">content_copy</span>
+</div>
+</div>
+</div>
+<div class="mt-12 flex justify-center items-center gap-6">
+<button class="flex items-center gap-2 bg-white/5 border border-muted px-6 py-3 rounded-full text-white font-headline font-bold hover:bg-white/10 transition-all">
+<span class="material-symbols-outlined" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+                    Star on GitHub
+                    <span class="text-on-surface/40 font-normal">1.2k</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-[#0F0F1A] w-full py-12 border-t border-[#2D2D3F]">
+<div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex flex-col gap-2">
+<div class="font-['JetBrains_Mono'] text-[#00CEC9] text-sm">Design Guard CLI</div>
+<div class="font-['DM_Sans'] text-xs text-[#E8E8F0]">© 2026 Design Guard. MIT Licensed.</div>
+</div>
+<div class="text-xs text-on-surface/60 font-body">
+                Built by <span class="text-white font-bold">Fernando Rodriguez Memije</span>
+</div>
+<div class="flex gap-6 font-['DM_Sans'] text-xs text-[#E8E8F0]">
+<a class="hover:text-[#FD79A8] transition-colors" href="#">GitHub</a>
+<a class="hover:text-[#FD79A8] transition-colors" href="#">LinkedIn</a>
+<a class="hover:text-[#FD79A8] transition-colors" href="#">Documentation</a>
+<a class="hover:text-[#FD79A8] transition-colors" href="#">Email</a>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-[10px] font-mono border border-muted px-2 py-1 rounded text-on-surface/40 uppercase tracking-widest">MIT License</span>
+<div class="text-[10px] font-headline font-bold text-primary">Built with Design Guard</div>
+</div>
+</div>
+</footer>
+</body></html>
