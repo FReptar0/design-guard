@@ -5,8 +5,51 @@ export interface WorkflowStep {
   dependsOn?: string;
 }
 
+export interface WorkflowPageTemplate {
+  type: string;
+  name: string;
+  prompt: string;
+}
+
+export interface WorkflowDefinition {
+  name: string;
+  description: string;
+  pages: WorkflowPageTemplate[];
+}
+
+export const WORKFLOWS: Record<string, WorkflowDefinition> = {
+  'new-site': {
+    name: 'New Website',
+    description: 'Create a complete website from scratch',
+    pages: [
+      { type: 'hero', name: 'Home / Landing', prompt: 'Homepage with hero section, value proposition, and key CTAs' },
+      { type: 'about', name: 'About', prompt: 'About page with company story, team, and mission' },
+      { type: 'services', name: 'Services/Products', prompt: 'Services or products listing with descriptions and pricing hints' },
+      { type: 'contact', name: 'Contact', prompt: 'Contact page with form, location map placeholder, and business hours' },
+    ],
+  },
+  'redesign': {
+    name: 'Website Redesign',
+    description: 'Redesign an existing website with improved design quality',
+    pages: [
+      { type: 'hero', name: 'Home (Redesigned)', prompt: 'Redesigned homepage maintaining brand identity but modernizing layout and UX' },
+      { type: 'key-page', name: 'Key Page (Redesigned)', prompt: 'Redesigned version of the most important inner page' },
+    ],
+  },
+  'landing': {
+    name: 'Landing Page',
+    description: 'Create a single high-conversion landing page',
+    pages: [
+      { type: 'landing', name: 'Landing Page', prompt: 'Single-page landing with hero, features, social proof, pricing, and CTA sections' },
+    ],
+  },
+};
+
+export const WORKFLOW_TYPES = Object.keys(WORKFLOWS);
+
+/** Legacy step-based workflows, kept for backward compat with dg tui */
 export const WORKFLOW_REDESIGN: WorkflowStep[] = [
-  { name: 'design', command: 'dg design', description: 'Define brand identity and design tokens → Write DESIGN.md' },
+  { name: 'design', command: 'dg design', description: 'Define brand identity and design tokens -> Write DESIGN.md' },
   { name: 'import', command: 'manual', description: 'Import DESIGN.md into Stitch project (manual step in Stitch UI)' },
   { name: 'homepage', command: 'dg generate', description: 'Generate homepage first (establishes visual language)', dependsOn: 'import' },
   { name: 'refine-home', command: 'dg generate', description: 'Refine homepage with 3-5 incremental prompts', dependsOn: 'homepage' },
