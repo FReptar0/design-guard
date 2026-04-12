@@ -4,16 +4,26 @@
 
 Dark futuristic terminal aesthetic with neon accents — inspired by IDE color schemes and cyberpunk UI. The design feels like a premium developer tool: precise, technical, confident. Glassmorphism cards with subtle backdrop blur create depth against the dark canvas. The visual language says "this is built by developers, for developers" while remaining approachable enough for designers exploring AI-powered workflows.
 
-**Business Model**: Open source CLI framework — free to use, community-driven, MIT licensed.
-**Website Purpose**: Drive tool adoption (npm install / GitHub clone) and grow the open source community (GitHub stars, contributions, discussions). NOT a SaaS product — no pricing, no signup, no user accounts.
+**Business Model**: Open source design intelligence library (`@design-guard/core`) + CLI tool (`design-guard`) — free, MIT licensed.
+**Website Purpose**: Drive adoption of both the npm library and CLI. Show developers why AI-generated designs need a quality layer. NOT a SaaS — no pricing, no signup, no accounts.
 **Primary User Goals**:
-1. Understand what Design Guard does in under 30 seconds
-2. See the workflow in action (design → generate → build)
-3. Install and start using the CLI
-4. Explore Claude Code slash commands
-5. Star the repo or contribute
+1. Understand the problem (AI design slop) and the solution in under 30 seconds
+2. See the two products: `@design-guard/core` (library) and `dg` (CLI)
+3. See the workflow: research → design → generate → lint → build
+4. Install via `npm i -g design-guard` or `npm i @design-guard/core`
+5. Explore the 13 CLI commands and 7 Claude Code skills
+6. Star the repo or contribute
 
-**Key Page Elements**: Hero with clear value proposition, workflow visualization, feature highlights, Claude Code integration showcase, installation command, GitHub CTA.
+**Key Stats**:
+- 13 CLI commands: init, design, discover, generate, build, preview, sync, research, lint, tui, workflow, quota, tokens
+- 238 tests across 18 test files
+- 8 modular lint rules (anti-slop, heading hierarchy, accessibility, color adherence, business alignment)
+- 2 generators: Google Stitch MCP + Claude Direct
+- 3 output frameworks: Static HTML, Astro, Next.js
+- W3C DTCG token bridge (import/export)
+- 2 npm packages: @design-guard/core + design-guard
+
+**Key Page Elements**: Hero showing the problem→solution, stats strip, features bento (design intelligence, lint, multi-generator, DTCG tokens, workflow), how-it-works (5-step pipeline), commands showcase, quality demo (before/after lint), install CTA, GitHub CTA.
 **Avoid on this site**: Pricing pages, login/signup flows, user dashboards, enterprise contact forms, SaaS trial CTAs, testimonial carousels with fake headshots.
 
 ## 2. Color Palette & Roles

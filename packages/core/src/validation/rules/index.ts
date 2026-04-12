@@ -1,7 +1,8 @@
 /**
- * Rule registry — manages all lint rules.
+ * Rule registry -- manages all lint rules.
  *
  * Rules are individually testable, configurable, and extensible.
+ * 18 total rules: 8 original (with bug fixes) + 10 new slop detection.
  */
 
 import type { LintRule } from './types.js';
@@ -13,6 +14,16 @@ import { altText } from './alt-text.js';
 import { colorAdherence } from './color-adherence.js';
 import { noIconGrid } from './no-icon-grid.js';
 import { businessAlignment } from './business-alignment.js';
+import { noLoremIpsum } from './no-lorem-ipsum.js';
+import { noSaasSpeak } from './no-saas-speak.js';
+import { noDuplicateCtas } from './no-duplicate-ctas.js';
+import { noCenteredEverything } from './no-centered-everything.js';
+import { noMissingResponsive } from './no-missing-responsive.js';
+import { noUniformSpacing } from './no-uniform-spacing.js';
+import { noDivSoup } from './no-div-soup.js';
+import { noMissingMeta } from './no-missing-meta.js';
+import { noGenericHero } from './no-generic-hero.js';
+import { noPlaceholderImages } from './no-placeholder-images.js';
 
 export type { LintRule, LintContext } from './types.js';
 
@@ -28,6 +39,16 @@ const ALL_RULES: LintRule[] = [
   colorAdherence,
   noIconGrid,
   businessAlignment,
+  noLoremIpsum,
+  noSaasSpeak,
+  noDuplicateCtas,
+  noCenteredEverything,
+  noMissingResponsive,
+  noUniformSpacing,
+  noDivSoup,
+  noMissingMeta,
+  noGenericHero,
+  noPlaceholderImages,
 ];
 
 /**

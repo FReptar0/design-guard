@@ -30,7 +30,9 @@ export interface LintRule {
   /** Default severity */
   severity: 'error' | 'warning' | 'info';
   /** Category for grouping */
-  category: 'color' | 'typography' | 'accessibility' | 'slop' | 'structure';
+  category: 'color' | 'typography' | 'accessibility' | 'slop' | 'structure' | 'content' | 'layout';
+  /** If true the rule requires a DESIGN.md to be useful */
+  requiresDesign?: boolean;
   /** Run the check and return any issues found */
   check(context: LintContext): ValidationIssue[];
 }

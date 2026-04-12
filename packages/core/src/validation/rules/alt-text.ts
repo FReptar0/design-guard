@@ -3,6 +3,8 @@ import type { ValidationIssue } from '../output-validator.js';
 
 /**
  * Checks for missing img alt attributes.
+ * Bug Fix (Frente A): detects data-alt without alt (Stitch pattern),
+ * separately counts data-alt-only vs fully missing alt.
  */
 export const altText: LintRule = {
   id: 'alt-text',
@@ -16,11 +18,22 @@ export const altText: LintRule = {
     const { $ } = context;
 
     const imgsWithoutAlt = $('img:not([alt])').length;
-    if (imgsWithoutAlt > 0) {
+    const imgsWithDataAltOnly = $('img[data-alt]:not([alt])').length;
+
+    if (imgsWithDataAltOnly > 0) {
       issues.push({
         type: 'error',
         category: 'accessibility',
-        message: `${imgsWithoutAlt} image(s) missing alt attribute.`,
+        message: `${imgsWithDataAltOnly} image(s) have data-alt but no alt attribute. Move data-alt value to alt for accessibility.`,
+      });
+    }
+
+    const imgsWithoutAnyAlt = imgsWithoutAlt - imgsWithDataAltOnly;
+    if (imgsWithoutAnyAlt > 0) {
+      issues.push({
+        type: 'error',
+        category: 'accessibility',
+        message: `${imgsWithoutAnyAlt} image(s) missing alt attribute.`,
       });
     }
 

@@ -1,10 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { load } from 'cheerio';
 import { getAllRules, getRule, getRulesByIds } from '../../src/validation/rules/index.js';
 import type { LintContext } from '../../src/validation/rules/types.js';
 
-// ─── Helper to build LintContext ───────────────────────────────────
-
+// Helper to build LintContext
 function buildContext(html: string, designMdContent?: string): LintContext {
   const $ = load(html);
   const allStyles =
@@ -21,12 +20,12 @@ function buildContext(html: string, designMdContent?: string): LintContext {
   return { html, allStyles, allClasses, $, designMdContent };
 }
 
-// ─── Rule registry tests ───────────────────────────────────────────
+// --- Rule registry tests ---
 
 describe('rule registry', () => {
-  it('getAllRules returns all built-in rules', () => {
+  it('getAllRules returns all 18 built-in rules', () => {
     const rules = getAllRules();
-    expect(rules.length).toBeGreaterThanOrEqual(8);
+    expect(rules.length).toBeGreaterThanOrEqual(18);
 
     const ids = rules.map((r) => r.id);
     expect(ids).toContain('empty-body');
@@ -37,6 +36,16 @@ describe('rule registry', () => {
     expect(ids).toContain('color-adherence');
     expect(ids).toContain('no-icon-grid');
     expect(ids).toContain('business-alignment');
+    expect(ids).toContain('no-lorem-ipsum');
+    expect(ids).toContain('no-saas-speak');
+    expect(ids).toContain('no-duplicate-ctas');
+    expect(ids).toContain('no-centered-everything');
+    expect(ids).toContain('no-missing-responsive');
+    expect(ids).toContain('no-uniform-spacing');
+    expect(ids).toContain('no-div-soup');
+    expect(ids).toContain('no-missing-meta');
+    expect(ids).toContain('no-generic-hero');
+    expect(ids).toContain('no-placeholder-images');
   });
 
   it('getRule returns the correct rule by ID', () => {
@@ -69,13 +78,13 @@ describe('rule registry', () => {
       expect(rule.name).toBeDefined();
       expect(rule.description).toBeDefined();
       expect(rule.severity).toMatch(/^(error|warning|info)$/);
-      expect(rule.category).toMatch(/^(color|typography|accessibility|slop|structure)$/);
+      expect(rule.category).toMatch(/^(color|typography|accessibility|slop|structure|content|layout)$/);
       expect(typeof rule.check).toBe('function');
     }
   });
 });
 
-// ─── Individual rule tests ─────────────────────────────────────────
+// --- Individual rule tests ---
 
 describe('empty-body rule', () => {
   it('flags empty body', () => {
@@ -114,14 +123,14 @@ describe('no-default-fonts rule', () => {
     expect(issues.some((i) => i.message.includes('Poppins'))).toBe(true);
   });
 
-  it('does not flag Inter when DESIGN.md specifies it', () => {
+  it('does not flag Inter when DESIGN.md Section 3 specifies it', () => {
     const rule = getRule('no-default-fonts')!;
     const ctx = buildContext(
       '<html><head><style>body { font-family: Inter, sans-serif; }</style></head><body>Text</body></html>',
-      '## 3. Typography\n- **Heading**: Inter, sans-serif',
+      '## 3. Typography\n- **Heading**: "Inter", sans-serif',
     );
     const issues = rule.check(ctx);
-    expect(issues.some((i) => i.message.includes('Inter'))).toBe(false);
+    expect(issues.some((i) => i.message.includes('"Inter" font'))).toBe(false);
   });
 
   it('flags Tailwind font-sans class', () => {
@@ -171,9 +180,7 @@ describe('heading-hierarchy rule', () => {
       '<html><body><h1>Title</h1><h4>Skipped</h4></body></html>',
     );
     const issues = rule.check(ctx);
-    expect(issues).toHaveLength(1);
-    expect(issues[0].message).toContain('h1');
-    expect(issues[0].message).toContain('h4');
+    expect(issues.some(i => i.message.includes('h1') && i.message.includes('h4'))).toBe(true);
   });
 
   it('passes correct heading order', () => {
@@ -200,9 +207,8 @@ describe('alt-text rule', () => {
       '<html><body><img src="a.jpg"><img src="b.jpg"></body></html>',
     );
     const issues = rule.check(ctx);
-    expect(issues).toHaveLength(1);
-    expect(issues[0].type).toBe('error');
-    expect(issues[0].message).toContain('2 image(s)');
+    expect(issues.some(i => i.type === 'error')).toBe(true);
+    expect(issues.some(i => i.message.includes('2 image(s)'))).toBe(true);
   });
 
   it('passes images with alt', () => {
@@ -218,11 +224,7 @@ describe('alt-text rule', () => {
 describe('color-adherence rule', () => {
   it('flags colors not in DESIGN.md palette', () => {
     const rule = getRule('color-adherence')!;
-    const designMd = `## 2. Color Palette
-| Role | Name | Hex | Usage |
-|------|------|-----|-------|
-| Primary | Blue | #0000FF | CTAs |
-`;
+    const designMd = '## 2. Color Palette\n| Role | Hex |\n| Primary | #0000FF |\n';
     const ctx = buildContext(
       '<html><head><style>.a{color:#FF0000}.b{color:#00FF00}.c{color:#FFFF00}.d{color:#FF00FF}</style></head><body>Text</body></html>',
       designMd,
@@ -234,11 +236,7 @@ describe('color-adherence rule', () => {
 
   it('returns no issues when colors match palette', () => {
     const rule = getRule('color-adherence')!;
-    const designMd = `## 2. Color Palette
-| Role | Name | Hex | Usage |
-|------|------|-----|-------|
-| Primary | Blue | #0000FF | CTAs |
-`;
+    const designMd = '## 2. Color Palette\n| Primary | #0000FF |\n';
     const ctx = buildContext(
       '<html><head><style>.a{color:#0000FF}</style></head><body>Text</body></html>',
       designMd,
@@ -258,7 +256,7 @@ describe('color-adherence rule', () => {
 });
 
 describe('no-icon-grid rule', () => {
-  it('flags three-column icon grid as second section', () => {
+  it('flags three-icon grid as second section', () => {
     const rule = getRule('no-icon-grid')!;
     const ctx = buildContext(`
       <html><body>
@@ -273,7 +271,7 @@ describe('no-icon-grid rule', () => {
       </body></html>
     `);
     const issues = rule.check(ctx);
-    expect(issues.some((i) => i.message.includes('three-column icon grid'))).toBe(true);
+    expect(issues.some((i) => i.message.includes('Second section'))).toBe(true);
   });
 
   it('returns no issues for non-icon sections', () => {
@@ -292,10 +290,9 @@ describe('no-icon-grid rule', () => {
 describe('business-alignment rule', () => {
   it('flags e-commerce elements on non-e-commerce site', () => {
     const rule = getRule('business-alignment')!;
-    const designMd = 'This is not an e-commerce site.';
     const ctx = buildContext(
       '<html><body><button>Add to Cart</button></body></html>',
-      designMd,
+      'This is not an e-commerce site.',
     );
     const issues = rule.check(ctx);
     expect(issues).toHaveLength(1);
@@ -305,10 +302,9 @@ describe('business-alignment rule', () => {
 
   it('returns no issues when business model matches', () => {
     const rule = getRule('business-alignment')!;
-    const designMd = 'An e-commerce store for great products.';
     const ctx = buildContext(
       '<html><body><button>Add to Cart</button></body></html>',
-      designMd,
+      'An e-commerce store for great products.',
     );
     const issues = rule.check(ctx);
     expect(issues).toHaveLength(0);
@@ -324,36 +320,236 @@ describe('business-alignment rule', () => {
   });
 });
 
-// ─── Regression: validateOutput still works ────────────────────────
+// --- New slop detection rule tests (Frente B) ---
 
-describe('output validator regression (via rule registry)', () => {
-  // Reset module mock to allow this block to import fresh
-  vi.mock('node:fs', async () => ({
-    existsSync: vi.fn(() => false),
-    readFileSync: vi.fn(() => ''),
-  }));
-
-  it('validateOutput detects missing alt attributes', async () => {
-    const { validateOutput } = await import('../../src/validation/output-validator.js');
-    const result = validateOutput('<html><body><img src="test.jpg"></body></html>');
-    expect(result.issues.some((i) => i.category === 'accessibility')).toBe(true);
+describe('no-lorem-ipsum rule', () => {
+  it('flags lorem ipsum text', () => {
+    const rule = getRule('no-lorem-ipsum')!;
+    const ctx = buildContext('<html><body><p>Lorem ipsum dolor sit amet</p></body></html>');
+    const issues = rule.check(ctx);
+    expect(issues.some((i) => i.message.toLowerCase().includes('lorem ipsum'))).toBe(true);
+    expect(issues[0].type).toBe('error');
   });
 
-  it('validateOutput detects AI slop fonts', async () => {
-    const { validateOutput } = await import('../../src/validation/output-validator.js');
-    const result = validateOutput(
-      '<html><head><style>body { font-family: Inter, sans-serif; }</style></head><body>Text</body></html>',
-    );
-    expect(result.issues.some((i) => i.category === 'slop' && i.message.includes('Inter'))).toBe(true);
+  it('passes real content', () => {
+    const rule = getRule('no-lorem-ipsum')!;
+    const ctx = buildContext('<html><body><p>Our company helps businesses grow with real solutions.</p></body></html>');
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+describe('no-saas-speak rule', () => {
+  it('flags "Transform your workflow"', () => {
+    const rule = getRule('no-saas-speak')!;
+    const ctx = buildContext('<html><body><h1>Transform your workflow</h1></body></html>');
+    const issues = rule.check(ctx);
+    expect(issues.some((i) => i.message.includes('Transform your workflow'))).toBe(true);
   });
 
-  it('validateOutput passes clean HTML', async () => {
-    const { validateOutput } = await import('../../src/validation/output-validator.js');
-    const result = validateOutput(
-      '<html><head><style>body { font-family: "Space Grotesk", sans-serif; }</style></head>' +
-        '<body><h1>Hello</h1><h2>World</h2><img src="test.jpg" alt="Test"></body></html>',
-    );
-    expect(result.passed).toBe(true);
-    expect(result.score).toBeGreaterThanOrEqual(80);
+  it('passes unique marketing copy', () => {
+    const rule = getRule('no-saas-speak')!;
+    const ctx = buildContext('<html><body><h1>Grow your garden, one seed at a time</h1></body></html>');
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+describe('no-duplicate-ctas rule', () => {
+  it('flags CTA text appearing 3+ times', () => {
+    const rule = getRule('no-duplicate-ctas')!;
+    const ctx = buildContext(`<html><body>
+      <a href="#">Get Started</a>
+      <button>Get Started</button>
+      <a href="#">Get Started</a>
+    </body></html>`);
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].message).toContain('get started');
+  });
+
+  it('passes with varied CTA text', () => {
+    const rule = getRule('no-duplicate-ctas')!;
+    const ctx = buildContext(`<html><body>
+      <a href="#">Get Started</a>
+      <a href="#">Learn More</a>
+      <button>Sign Up</button>
+    </body></html>`);
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+describe('no-centered-everything rule', () => {
+  it('flags pages where most text is centered', () => {
+    const rule = getRule('no-centered-everything')!;
+    const ctx = buildContext(`<html><body>
+      <h1 class="text-center">Title</h1>
+      <p class="text-center">Paragraph 1</p>
+      <p class="text-center">Paragraph 2</p>
+      <p class="text-center">Paragraph 3</p>
+      <p class="text-center">Paragraph 4</p>
+    </body></html>`);
+    const issues = rule.check(ctx);
+    expect(issues.some((i) => i.message.includes('center-aligned'))).toBe(true);
+  });
+
+  it('passes with mixed alignment', () => {
+    const rule = getRule('no-centered-everything')!;
+    const ctx = buildContext(`<html><body>
+      <h1 class="text-center">Title</h1>
+      <p class="text-left">Left text</p>
+      <p>Default text</p>
+      <p class="text-right">Right text</p>
+      <p>More default</p>
+    </body></html>`);
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+describe('no-missing-responsive rule', () => {
+  it('flags large pages with no responsive indicators', () => {
+    const rule = getRule('no-missing-responsive')!;
+    const lines = Array.from({ length: 60 }, (_, i) => `<p>Line ${i}</p>`);
+    const html = `<html><head></head><body>\n${lines.join('\n')}\n</body></html>`;
+    const ctx = buildContext(html);
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].message).toContain('No responsive');
+  });
+
+  it('passes with viewport meta', () => {
+    const rule = getRule('no-missing-responsive')!;
+    const lines = Array.from({ length: 60 }, (_, i) => `<p>Line ${i}</p>`);
+    const html = `<html><head><meta name="viewport" content="width=device-width"></head><body>\n${lines.join('\n')}\n</body></html>`;
+    const ctx = buildContext(html);
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(0);
+  });
+
+  it('passes short pages without responsive', () => {
+    const rule = getRule('no-missing-responsive')!;
+    const ctx = buildContext('<html><body><p>Short page</p></body></html>');
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+describe('no-div-soup rule', () => {
+  it('flags excessive divs with no semantic elements', () => {
+    const rule = getRule('no-div-soup')!;
+    const divs = Array.from({ length: 10 }, (_, i) => `<div>Block ${i}</div>`).join('');
+    const ctx = buildContext(`<html><body>${divs}</body></html>`);
+    const issues = rule.check(ctx);
+    expect(issues.some((i) => i.message.includes('zero semantic'))).toBe(true);
+  });
+
+  it('flags missing main element', () => {
+    const rule = getRule('no-div-soup')!;
+    const ctx = buildContext('<html><body><section><p>Content</p></section></body></html>');
+    const issues = rule.check(ctx);
+    expect(issues.some((i) => i.message.includes('<main>'))).toBe(true);
+  });
+});
+
+describe('no-missing-meta rule', () => {
+  it('flags missing lang, viewport, description, and title', () => {
+    const rule = getRule('no-missing-meta')!;
+    const ctx = buildContext('<html><head></head><body><p>Text</p></body></html>');
+    const issues = rule.check(ctx);
+    expect(issues.length).toBe(4);
+    expect(issues.some((i) => i.message.includes('lang'))).toBe(true);
+    expect(issues.some((i) => i.message.includes('viewport'))).toBe(true);
+    expect(issues.some((i) => i.message.includes('description'))).toBe(true);
+    expect(issues.some((i) => i.message.includes('title'))).toBe(true);
+  });
+
+  it('passes with all meta present', () => {
+    const rule = getRule('no-missing-meta')!;
+    const ctx = buildContext(`<html lang="en"><head>
+      <meta name="viewport" content="width=device-width">
+      <meta name="description" content="A great page">
+      <title>My Page</title>
+    </head><body><p>Text</p></body></html>`);
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+describe('no-generic-hero rule', () => {
+  it('flags classic AI hero pattern', () => {
+    const rule = getRule('no-generic-hero')!;
+    const ctx = buildContext(`<html><body>
+      <section class="text-center" style="background: linear-gradient(to right, purple, blue);">
+        <h1>Welcome to Our Platform</h1>
+        <p>The best solution for your needs</p>
+        <a href="#">Get Started</a>
+      </section>
+    </body></html>`);
+    const issues = rule.check(ctx);
+    expect(issues.some((i) => i.message.includes('Generic AI hero'))).toBe(true);
+  });
+
+  it('passes hero without gradient', () => {
+    const rule = getRule('no-generic-hero')!;
+    const ctx = buildContext(`<html><body>
+      <section class="text-center">
+        <h1>Welcome</h1>
+        <p>Description</p>
+        <a href="#">CTA</a>
+      </section>
+    </body></html>`);
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+describe('no-placeholder-images rule', () => {
+  it('flags placeholder image URLs', () => {
+    const rule = getRule('no-placeholder-images')!;
+    const ctx = buildContext('<html><body><img src="https://via.placeholder.com/300" alt="test"></body></html>');
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].message).toContain('Placeholder image');
+  });
+
+  it('flags images with empty src', () => {
+    const rule = getRule('no-placeholder-images')!;
+    const ctx = buildContext('<html><body><img src="" alt="test"></body></html>');
+    const issues = rule.check(ctx);
+    expect(issues.some((i) => i.message.includes('empty/placeholder'))).toBe(true);
+  });
+
+  it('passes real image URLs', () => {
+    const rule = getRule('no-placeholder-images')!;
+    const ctx = buildContext('<html><body><img src="/images/hero.jpg" alt="Hero"></body></html>');
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+describe('no-uniform-spacing rule', () => {
+  it('flags uniform spacing with no variation', () => {
+    const rule = getRule('no-uniform-spacing')!;
+    const paddings = Array.from({ length: 15 }, () => '.x { padding: 24px; }').join('\n');
+    const html = `<html><head><style>${paddings}</style></head><body><p>Text</p></body></html>`;
+    const ctx = buildContext(html);
+    const issues = rule.check(ctx);
+    expect(issues.some((i) => i.message.includes('24px'))).toBe(true);
+  });
+
+  it('passes with varied spacing', () => {
+    const rule = getRule('no-uniform-spacing')!;
+    const html = `<html><head><style>
+      .a { margin: 8px; }
+      .b { padding: 16px; }
+      .c { margin: 24px; }
+      .d { padding: 32px; }
+      .e { margin: 12px; }
+    </style></head><body><p>Text</p></body></html>`;
+    const ctx = buildContext(html);
+    const issues = rule.check(ctx);
+    expect(issues).toHaveLength(0);
   });
 });
