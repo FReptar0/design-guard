@@ -8,6 +8,14 @@ export { scoreDesignMd, hexDistance, scoreSpecificity, scoreDifferentiation, sco
 export { validateOutput, formatValidationReport } from './validation/output-validator.js';
 export type { ValidationIssue, OutputValidationResult } from './validation/output-validator.js';
 
+// ─── Rules ─────────────────────────────────────────────────────────
+export { getAllRules, getRule, getRulesByIds } from './validation/rules/index.js';
+export type { LintRule, LintContext } from './validation/rules/types.js';
+
+// ─── Tokens ────────────────────────────────────────────────────────
+export { designMdToDTCG, dtcgToDesignMd, dtcgToCSS, dtcgToFlatJSON, extractColorTokens, extractTypographyTokens, extractSpacingTokens } from './tokens/dtcg-converter.js';
+export type { DTCGToken, DTCGTokenGroup, DTCGFile } from './tokens/dtcg-converter.js';
+
 // ─── Templates ─────────────────────────────────────────────────────
 export { generateDesignMdTemplate, matchIndustry, matchAesthetic, generateImageryGuidelines, generateDosAndDonts, INDUSTRY_PALETTES, AESTHETIC_MODIFIERS } from './templates/design-md.js';
 export type { DesignBrief, IndustryPalette, AestheticModifier } from './templates/design-md.js';

@@ -139,12 +139,24 @@ program
   });
 
 program
-  .command('workflow')
-  .description('Show guided workflow steps for common design tasks')
-  .argument('[type]', 'Workflow type: redesign or new-app')
-  .action(async (type?: string) => {
+  .command('workflow [type]')
+  .description('Run guided workflow: new-site, redesign, landing')
+  .option('--url <url>', 'URL of existing site (for research)')
+  .option('--competitors <urls>', 'Competitor URLs (comma-separated)')
+  .option('--locale <locale>', 'Target locale', 'en-US')
+  .option('-f, --framework <framework>', 'Output framework: static, astro, nextjs', 'static')
+  .option('-g, --generator <type>', 'Generator: stitch, claude')
+  .option('--auto', 'Skip confirmation checkpoints')
+  .action(async (type: string | undefined, opts: Record<string, unknown>) => {
     const { runWorkflow } = await import('./commands/workflow.js');
-    await runWorkflow(type);
+    await runWorkflow(type || undefined, {
+      url: opts.url as string | undefined,
+      competitors: opts.competitors as string | undefined,
+      locale: opts.locale as string | undefined,
+      framework: opts.framework as string | undefined,
+      generator: (opts.generator || program.opts().generator) as string | undefined,
+      auto: opts.auto as boolean | undefined,
+    });
   });
 
 program
@@ -153,6 +165,29 @@ program
   .action(async () => {
     const { formatQuotaDisplay } = await import('./utils/quota.js');
     console.log(formatQuotaDisplay());
+  });
+
+const tokensCmd = program
+  .command('tokens')
+  .description('Convert between DESIGN.md and design token formats');
+
+tokensCmd
+  .command('export')
+  .description('Export DESIGN.md as design tokens')
+  .option('--format <type>', 'Output format: dtcg, css, json', 'dtcg')
+  .option('-o, --output <path>', 'Output file path (stdout if not specified)')
+  .action(async (opts: { format?: string; output?: string }) => {
+    const { runTokensExport } = await import('./commands/tokens.js');
+    await runTokensExport(opts);
+  });
+
+tokensCmd
+  .command('import <file>')
+  .description('Import design tokens into DESIGN.md')
+  .option('--merge', 'Merge with existing DESIGN.md instead of replacing')
+  .action(async (file: string, opts: { merge?: boolean }) => {
+    const { runTokensImport } = await import('./commands/tokens.js');
+    await runTokensImport(file, opts);
   });
 
 program.parse();
