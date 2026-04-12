@@ -6,6 +6,7 @@ dist/
 screens/
 coverage/
 *.tgz
+*.tsbuildinfo
 .DS_Store
 .claude/worktrees/
 .forge-research/

@@ -1,9 +1,9 @@
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { log } from '../utils/logger.js';
-import { validatePrompt } from '../utils/validators.js';
+import { validatePrompt, buildInitialPrompt } from '@design-guard/core';
+import type { ScreenSpec } from '@design-guard/core';
 import { canGenerate, getQuotaStatus } from '../utils/quota.js';
 import { incrementQuota } from '../utils/config.js';
-import { buildInitialPrompt, type ScreenSpec } from '../templates/prompts.js';
 import { StitchMcpClient } from '../mcp/client.js';
 
 interface GenerateOptions {

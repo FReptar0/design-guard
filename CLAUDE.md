@@ -13,73 +13,97 @@ auto-research for tool updates, and integration with Claude Code via slash comma
 ## Architecture
 
 ```
-stitch-forge/
-├── CLAUDE.md                    # You are here
-├── package.json
-├── tsconfig.json
-├── vitest.config.ts
+stitch-forge/                        # Monorepo root (npm workspaces)
+├── CLAUDE.md                        # You are here
+├── package.json                     # Workspace root — delegates to packages
+├── tsconfig.json                    # Project references (core + cli)
+├── tsconfig.base.json               # Shared TypeScript compiler options
 ├── .claude/
-│   └── commands/                # Claude Code slash commands
-│       ├── forge-design.md      # /forge-design — generate DESIGN.md from brief
-│       ├── forge-generate.md    # /forge-generate — generate screens via Stitch
-│       ├── forge-build.md       # /forge-build — map screens to routes, build site
-│       ├── forge-research.md    # /forge-research — check for Stitch updates
-│       └── forge-sync.md       # /forge-sync — pull latest from Stitch project
-├── src/
-│   ├── index.ts                 # CLI entry point (commander + ink)
-│   ├── commands/
-│   │   ├── init.ts              # forge init — setup project, auth
-│   │   ├── design.ts            # forge design — generate/import DESIGN.md
-│   │   ├── generate.ts          # forge generate — send prompts to Stitch
-│   │   ├── build.ts             # forge build — build Astro site from screens
-│   │   ├── research.ts          # forge research — auto-update knowledge base
-│   │   └── sync.ts              # forge sync — pull project state from Stitch
-│   ├── tui/
-│   │   ├── App.tsx              # Main Ink app component
-│   │   ├── Dashboard.tsx        # Project overview, screen list, quota usage
-│   │   ├── PromptBuilder.tsx    # Interactive prompt composer with guardrails
-│   │   ├── DesignEditor.tsx     # DESIGN.md section editor
-│   │   └── components/
-│   │       ├── ScreenCard.tsx   # Screen preview card
-│   │       ├── QuotaMeter.tsx   # Generation quota tracker
-│   │       ├── StatusBar.tsx    # Bottom status bar
-│   │       └── Spinner.tsx      # Loading indicator
-│   ├── research/
-│   │   ├── crawler.ts           # Fetch and parse Stitch docs/changelog
-│   │   ├── differ.ts            # Compare current vs new state
-│   │   ├── updater.ts           # Apply updates to knowledge base
-│   │   └── known-state.json     # Last known state of Stitch features
-│   ├── templates/
-│   │   ├── design-md.ts         # DESIGN.md template generator
-│   │   ├── prompts.ts           # Prompt templates (initial, refinement, locale)
-│   │   └── workflows.ts         # Workflow sequences (redesign, new app)
-│   ├── mcp/
-│   │   ├── client.ts            # MCP client wrapper for Stitch tools
-│   │   ├── tools.ts             # Tool call builders (generate_screen, build_site, etc.)
-│   │   └── auth.ts              # Auth handler (API key or OAuth)
-│   └── utils/
-│       ├── config.ts            # Project config (.forgerc.json)
-│       ├── logger.ts            # Structured logging
-│       ├── validators.ts        # Prompt length, DESIGN.md schema validation
-│       └── quota.ts             # Track generation usage against limits
-├── tests/
-│   ├── unit/
-│   │   ├── design-md.test.ts    # DESIGN.md generation and validation
-│   │   ├── prompts.test.ts      # Prompt builder output and guardrails
-│   │   ├── validators.test.ts   # Validation rules
-│   │   ├── research.test.ts     # Diff and update logic
-│   │   └── quota.test.ts        # Quota tracking
-│   ├── integration/
-│   │   ├── mcp-client.test.ts   # MCP tool calls (mocked server)
-│   │   └── workflow.test.ts     # End-to-end workflow sequences
-│   └── fixtures/
-│       ├── sample-design.md     # Example DESIGN.md for tests
-│       ├── stitch-response.json # Mocked Stitch API responses
-│       └── screen-html.html     # Sample screen HTML output
-└── docs/
-    ├── design-md-guide.md       # Full DESIGN.md format specification
-    ├── prompting-guide.md       # Prompt strategies and examples
-    └── known-state.md           # Human-readable Stitch feature state
+│   ├── commands/                    # Claude Code slash commands
+│   │   ├── forge-design.md
+│   │   ├── forge-generate.md
+│   │   ├── forge-build.md
+│   │   ├── forge-research.md
+│   │   └── forge-sync.md
+│   └── skills/                      # Claude Code skills
+├── packages/
+│   ├── core/                        # @design-guard/core — design intelligence library
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   ├── vitest.config.ts
+│   │   └── src/
+│   │       ├── index.ts             # Public API barrel export
+│   │       ├── research/
+│   │       │   ├── types.ts         # Shared types (BusinessBrief, SiteAnalysis, etc.)
+│   │       │   ├��─ business-researcher.ts  # Site scraping + brand analysis
+│   │       │   ├── design-synthesizer.ts   # Research -> DESIGN.md synthesis
+│   │       │   └── research-cache.ts       # Research result caching
+│   │       ├── validation/
+│   │       │   ├── design-validator.ts     # DESIGN.md quality scoring
+│   │       │   └── output-validator.ts     # HTML output anti-slop validation
+│   │       ├── templates/
+│   │       │   ├── design-md.ts     # DESIGN.md template generator
+│   │       ���   └── prompts.ts       # Prompt templates (initial, refinement, locale)
+│   │       └── utils/
+│   │           ├── validators.ts    # Zod schemas + prompt validation
+│   │           └── prompt-enhancer.ts # Prompt improvement + slop risk scoring
+│   └── cli/                         # design-guard CLI — depends on @design-guard/core
+│       ├── package.json
+│       ├── tsconfig.json
+│       ├── vitest.config.ts
+│       └── src/
+│           ├── index.ts             # CLI entry point (commander + ink)
+│           ├── commands/
+│           │   ├── init.ts          # forge init — setup project, auth
+│           │   ├── design.ts        # forge design — generate/import DESIGN.md
+│           │   ├── discover.ts      # forge discover — research + synthesize DESIGN.md
+│           │   ├── generate.ts      # forge generate — send prompts to Stitch
+│           │   ├── build.ts         # forge build — build Astro site from screens
+│           │   ├── preview.ts       # forge preview — local preview server
+│           │   ├── research.ts      # forge research — auto-update knowledge base
+│           │   ├── sync.ts          # forge sync — pull project state from Stitch
+│           │   └── workflow.ts      # forge workflow — multi-step workflows
+│           ├── tui/
+│           │   ├── App.tsx          # Main Ink app component
+│           │   ├── Dashboard.tsx    # Project overview, screen list, quota usage
+│           │   ├── PromptBuilder.tsx # Interactive prompt composer with guardrails
+│           │   ├── DesignEditor.tsx  # DESIGN.md section editor
+│           │   └── components/
+│           │       ├── ScreenCard.tsx
+│           │       ├── QuotaMeter.tsx
+│           │       ├── StatusBar.tsx
+│           │       └── Spinner.tsx
+│           ├── mcp/
+│           │   ├── client.ts        # MCP client wrapper for Stitch tools
+│           │   ├── tools.ts         # Tool call builders
+│           │   └── auth.ts          # Auth handler (API key or OAuth)
+│           ├── adapters/
+│           │   ├── index.ts         # Adapter registry
+│           │   ├── types.ts         # Adapter types
+│           │   ├── astro.ts         # Astro site builder
+│           │   ├── static.ts        # Static HTML site builder
+│           │   └── nextjs.ts        # Next.js site builder
+│           ├── research/
+│           │   ├── crawler.ts       # Fetch and parse Stitch docs/changelog
+│           │   ├── differ.ts        # Compare current vs new state
+│           │   ├── updater.ts       # Apply updates to knowledge base
+│           │   └── known-state.json # Last known state of Stitch features
+│           ├── templates/
+│           │   └── workflows.ts     # Workflow sequences (redesign, new app)
+│           └── utils/
+│               ├── config.ts        # Project config (.guardrc.json)
+│               ├── logger.ts        # Structured logging
+│               ├── quota.ts         # Track generation usage against limits
+│               └── preview.ts       # Local preview server
+├── docs/
+│   ├── design-md-guide.md
+│   ├── prompting-guide.md
+│   └── known-state.md
+├── public/                          # Landing page assets
+├── scripts/                         # Repo scripts (demo.tape)
+├── README.md
+├── LICENSE
+└── DESIGN.md
 ```
 
 ## Conventions
@@ -87,7 +111,7 @@ stitch-forge/
 - All source in TypeScript with strict mode
 - Use `import` not `require`
 - Ink components use functional components with hooks
-- All MCP calls go through `src/mcp/client.ts`, never direct fetch
+- All MCP calls go through `packages/cli/src/mcp/client.ts`, never direct fetch
 - Config stored in `.forgerc.json` at project root
 - Logs to stderr, output to stdout
 - All user-facing strings in English (i18n not needed yet)
@@ -220,7 +244,7 @@ The research module checks for Stitch updates by:
 1. Fetching `https://stitch.withgoogle.com/docs/` (main docs)
 2. Fetching `https://blog.google/technology/ai/stitch/` (announcements)
 3. Searching `site:discuss.ai.google.dev stitch` (forum)
-4. Comparing extracted info against `src/research/known-state.json`
+4. Comparing extracted info against `packages/cli/src/research/known-state.json`
 5. If differences found:
    - Update `known-state.json` with new data and timestamp
    - Update `docs/known-state.md` human-readable version
@@ -252,12 +276,14 @@ The research module checks for Stitch updates by:
 - **Unit tests**: Validators, template generators, prompt builders, diff logic
 - **Integration tests**: MCP client with mocked server responses
 - **No E2E tests against live Stitch** — use fixtures for reproducibility
-- Mock MCP responses in `tests/fixtures/stitch-response.json`
+- Mock MCP responses in `packages/cli/tests/fixtures/stitch-response.json`
 - Test quota tracking with simulated generation sequences
 - Test research differ with before/after state snapshots
 
-Run: `npm test` (vitest)
-Run single: `npm test -- --run tests/unit/prompts.test.ts`
+Run all: `npm test` (delegates to both workspaces)
+Run core only: `npm run test:core`
+Run CLI only: `npm run test:cli`
+Run single: `npm run test:run --workspace=packages/core -- tests/unit/prompts.test.ts`
 
 ## Development Workflow
 

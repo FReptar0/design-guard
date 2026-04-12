@@ -19,7 +19,7 @@ import {
   generateDosAndDonts,
   type DesignBrief,
 } from '../templates/design-md.js';
-import { scoreDesignMd } from '../utils/design-validator.js';
+import { scoreDesignMd } from '../validation/design-validator.js';
 
 // ─── Color naming utility ──────────────────────────────────────────
 

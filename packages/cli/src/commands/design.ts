@@ -1,6 +1,6 @@
 import { writeFileSync, existsSync } from 'node:fs';
 import { log } from '../utils/logger.js';
-import { generateDesignMdTemplate, type DesignBrief } from '../templates/design-md.js';
+import { generateDesignMdTemplate, type DesignBrief } from '@design-guard/core';
 
 export async function runDesign(briefText: string, opts?: { force?: boolean }): Promise<void> {
   if (existsSync('DESIGN.md') && !opts?.force) {
