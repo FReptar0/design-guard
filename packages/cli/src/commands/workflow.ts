@@ -261,7 +261,18 @@ export async function runWorkflow(
         name: page.name,
         html: '',
         file: '',
-        validation: { score: 0, issues: [], passed: false },
+        validation: {
+          score: 0, issues: [], passed: false, confidence: 0,
+          breakdown: {
+            typography: { score: 0, issues: 0, maxPossible: 0 },
+            color: { score: 0, issues: 0, maxPossible: 0 },
+            layout: { score: 0, issues: 0, maxPossible: 0 },
+            content: { score: 0, issues: 0, maxPossible: 0 },
+            structure: { score: 0, issues: 0, maxPossible: 0 },
+            slop: { score: 0, issues: 0, maxPossible: 0 },
+            accessibility: { score: 0, issues: 0, maxPossible: 0 },
+          },
+        },
       });
     }
   }
