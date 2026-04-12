@@ -318,7 +318,7 @@ function outputSarif(results: FileResult[]): void {
         driver: {
           name: 'design-guard',
           version: '0.3.1',
-          informationUri: 'https://github.com/freptar0/stitch-forge',
+          informationUri: 'https://github.com/freptar0/design-guard',
         },
       },
       results: sarifResults,
