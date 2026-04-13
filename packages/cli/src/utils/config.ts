@@ -9,7 +9,7 @@ export interface StitchConfig {
   apiKey?: string;
   projectId?: string;
   projectName?: string;
-  defaultModel: 'GEMINI_3_PRO' | 'GEMINI_2_5_FLASH';
+  defaultModel: 'GEMINI_3_1_PRO' | 'GEMINI_3_FLASH' | 'GEMINI_3_PRO' | 'GEMINI_2_5_FLASH';
   framework?: 'static' | 'astro' | 'nextjs';
   generator?: GeneratorType;
   screens: Array<{
@@ -28,7 +28,7 @@ export interface StitchConfig {
 }
 
 const DEFAULT_CONFIG: StitchConfig = {
-  defaultModel: 'GEMINI_2_5_FLASH',
+  defaultModel: 'GEMINI_3_FLASH',
   screens: [],
   quota: {
     flashUsed: 0,
@@ -78,7 +78,7 @@ export function updateConfig(updates: Partial<StitchConfig>): StitchConfig {
   return config;
 }
 
-export function incrementQuota(model: 'GEMINI_3_PRO' | 'GEMINI_2_5_FLASH'): StitchConfig {
+export function incrementQuota(model: StitchConfig['defaultModel']): StitchConfig {
   const config = getConfig();
 
   // Check if quota needs reset
@@ -89,7 +89,7 @@ export function incrementQuota(model: 'GEMINI_3_PRO' | 'GEMINI_2_5_FLASH'): Stit
     config.quota.resetDate = getNextResetDate();
   }
 
-  if (model === 'GEMINI_2_5_FLASH') {
+  if (model === 'GEMINI_2_5_FLASH' || model === 'GEMINI_3_FLASH') {
     config.quota.flashUsed++;
   } else {
     config.quota.proUsed++;

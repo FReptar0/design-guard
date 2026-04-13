@@ -30,10 +30,19 @@ export const noSideTabBorders: LintRule = {
       }
     });
 
-    // Check 2: CSS border-left in style blocks
-    const borderLeftMatches = allStyles.match(/border-left\s*:\s*[3-8]px\s+solid/g);
-    if (borderLeftMatches) {
-      sideTabCount += borderLeftMatches.length;
+    // Check 2: CSS classes with border-left declarations — count ELEMENTS, not declarations.
+    // Extract class names whose CSS rules contain thick border-left.
+    const styleText = $('style').text();
+    const cssRuleRegex = /\.([a-zA-Z_][\w-]*)\s*\{[^}]*border-left\s*:\s*[3-8]px\s+solid[^}]*\}/gi;
+    let cssMatch: RegExpExecArray | null;
+    const borderLeftClasses: string[] = [];
+    while ((cssMatch = cssRuleRegex.exec(styleText)) !== null) {
+      borderLeftClasses.push(cssMatch[1]);
+    }
+    // Count how many elements use each class
+    for (const cls of borderLeftClasses) {
+      const elements = $(`.${cls}`);
+      sideTabCount += elements.length;
     }
 
     // Check 3: Inline styles with border-left

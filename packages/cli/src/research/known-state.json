@@ -1,8 +1,10 @@
 {
   "lastUpdated": "2026-04-11T00:00:00Z",
   "models": [
-    { "id": "GEMINI_3_PRO", "quotaMonthly": 200, "notes": "Highest quality, complex screens, image input" },
-    { "id": "GEMINI_2_5_FLASH", "quotaMonthly": 350, "notes": "Fast iteration" }
+    { "id": "GEMINI_3_1_PRO", "quotaMonthly": 200, "notes": "Highest quality, complex screens, image input" },
+    { "id": "GEMINI_3_FLASH", "quotaMonthly": 350, "notes": "Fast iteration" },
+    { "id": "GEMINI_3_PRO", "quotaMonthly": 200, "notes": "DEPRECATED — use GEMINI_3_1_PRO", "deprecated": true },
+    { "id": "GEMINI_2_5_FLASH", "quotaMonthly": 350, "notes": "DEPRECATED — use GEMINI_3_FLASH", "deprecated": true }
   ],
   "exportOptions": ["figma", "html_css_tailwind", "ai_studio", "antigravity"],
   "mcpEndpoint": "https://stitch.googleapis.com/mcp",
