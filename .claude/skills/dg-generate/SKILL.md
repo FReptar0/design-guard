@@ -1,14 +1,14 @@
 ---
 name: dg-generate
 description: >
-  Generate a screen in Google Stitch from a text description. Use when
+  Generate a screen using Google Stitch or Claude Code from a text description. Use when
   the user wants to create a new web page, landing page, dashboard,
   pricing page, about page, or any UI design. Also use when the user
   says "design a page", "create a screen", or "build a webpage".
   Uses DESIGN.md if available for visual consistency.
 ---
 
-Generate a screen in Google Stitch from a description.
+Generate a screen from a description using the configured generator (Stitch or Claude Code).
 
 ## Guardrails (MUST follow)
 
@@ -22,6 +22,26 @@ Before sending any prompt to Stitch:
 7. Flag generic terms ("modern", "clean", "professional") and suggest specific UI/UX vocabulary replacements (e.g., "asymmetric hero layout", "bento grid", "sticky nav with CTA")
 
 ## Instructions
+
+0. **Generator selection (MUST run before generating)**:
+   - Read `.guardrc.json` and check the `generator` field.
+   - **IF `generator` is already set** (value is `"stitch"` or `"claude"`):
+     - Use it. Tell the user: "Using **[Stitch MCP / Claude Code]** as your configured generator."
+     - Do NOT ask again.
+   - **IF `generator` is NOT set** (field missing or `.guardrc.json` does not exist):
+     - Present the options to the user:
+
+       "Which generator would you like to use for this project?
+
+       1. **Claude Code** (recommended) -- Generates HTML locally. Anti-slop rules from `.claude/rules/` are enforced during generation. Best for design-system compliance.
+       2. **Google Stitch** -- Generates via Stitch MCP. More creative/varied layouts, but anti-slop rules do NOT apply during generation (the critic catches issues after).
+
+       Which do you prefer? (Default: Claude Code)"
+
+     - If the user picks Claude Code (or does not express a preference): set `generator` to `"claude"`.
+     - If the user picks Stitch: set `generator` to `"stitch"`.
+     - Save the choice to `.guardrc.json` by updating the `generator` field (create file with defaults if it does not exist).
+     - Tell the user: "Saved generator preference to .guardrc.json. You can change it anytime by editing the file or telling me to switch."
 
 1. **Read DESIGN.md** if it exists at the project root. Use it as context for visual consistency.
 
@@ -50,7 +70,16 @@ Before sending any prompt to Stitch:
    ...
    ```
 
-4. **Generate the screen** by calling `mcp__stitch__generate_screen_from_text` with the prompt.
+4. **Generate the screen**:
+   - **IF generator is `stitch`**: Call `mcp__stitch__generate_screen_from_text` with the prompt. Include the Stitch project ID from `.guardrc.json`.
+   - **IF generator is `claude`**: Generate a complete, single-file HTML page directly. Follow these constraints:
+     - Apply ALL rules from `.claude/rules/anti-slop-design.md`
+     - Apply ALL rules from `.claude/rules/design-system-adherence.md`
+     - Apply ALL rules from `.claude/rules/content-authenticity.md`
+     - Follow DESIGN.md for all color, typography, spacing, and component decisions
+     - Use the zoom-out-zoom-in prompt structure from step 3 as the page specification
+     - Output a complete HTML file with embedded CSS (no external dependencies except Google Fonts)
+     - Run the self-check from `.claude/rules/post-generation-evaluation.md` before presenting
 
 5. **After generation**, retrieve the screen code and save the HTML to `screens/[screen-name].html`.
 
@@ -84,5 +113,33 @@ Before sending any prompt to Stitch:
     - **If WARN**: "Screen has minor issues. Run `/dg-evaluate` for detailed analysis, or refine with `/dg-generate` targeting the flagged issues."
     - **If FAIL**: "Screen needs work. Use the suggested refinement prompt above, or run `/dg-evaluate` for a full breakdown."
     - Always show quota status: "Quota: Flash {used}/{limit}, Pro {used}/{limit}"
+
+## Error Handling
+
+### Stitch Timeout Recovery
+
+IF a Stitch MCP call (`mcp__stitch__generate_screen_from_text`) times out, hangs, or returns an error:
+
+1. **Do NOT silently switch to Claude Code generation.** The user chose Stitch and must be informed.
+2. Tell the user exactly what happened: "Stitch MCP timed out while generating [screen name]. The screen may have been created server-side even though the response didn't come back."
+3. **Suggest sync first**: "I recommend running `/dg-sync` to check if the screen was completed on Stitch's end. Want me to do that?"
+4. IF the user agrees to sync:
+   - Run `/dg-sync` (call `mcp__stitch__list_screens` to check for the screen).
+   - IF the screen is found server-side: download it, save to `screens/`, and tell the user: "Found the screen on Stitch! Downloaded to screens/[name].html."  Done -- do NOT generate again.
+   - IF the screen is NOT found: tell the user: "Stitch did not complete this screen."
+5. **Only then offer fallback**: "Would you like me to generate this screen locally with Claude Code instead? (Anti-slop rules will be enforced.)"
+6. Generate locally with Claude Code ONLY if the user explicitly agrees.
+7. **NEVER**:
+   - Retry the Stitch call (the timeout suggests a server-side issue)
+   - Send parallel requests to Stitch
+   - Generate locally without asking
+   - Pretend the timeout didn't happen
+
+### Claude Code Generation Errors
+
+IF generating locally with Claude Code and the output is incomplete or malformed:
+1. Tell the user what went wrong.
+2. Offer to retry generation.
+3. Do NOT switch to Stitch as a fallback.
 
 Reference: See `docs/prompting-guide.md` for examples and strategies.
