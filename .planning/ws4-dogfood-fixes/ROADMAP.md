@@ -45,15 +45,16 @@ Plans:
 3. **Show quota status post-generation**
    - File: `.claude/skills/dg-generate/SKILL.md` — ensure quota display at step 12
 
-### Phase 4: Generation Strategy (P2 — reliability)
-**Research**: Stitch MCP timeout patterns, retry strategies, sync-after-timeout viability
+### Phase 4: Generation Strategy (P2 — reliability) ✅
+**Research**: phase4-RESEARCH.md
+**Plans**: phase4-01-PLAN.md
 **Deliverables**:
-1. **Sequential generation, not parallel**
-   - File: `.claude/skills/dg-generate/SKILL.md` — explicit instruction: one screen at a time, wait for result
-2. **Sync-after-timeout recovery**
-   - File: `.claude/skills/dg-generate/SKILL.md` — on timeout, wait then call list_screens to check if it completed
-3. **Model deprecation awareness**
-   - File: `.claude/skills/dg-generate/SKILL.md` — reference known-state.json for current models
+1. ✅ **Sequential generation, not parallel**
+   - File: `.claude/skills/dg-generate/SKILL.md` — step 9 rewritten with SEQUENTIAL ONLY rule
+2. ✅ **Sync-after-timeout recovery**
+   - File: `.claude/skills/dg-generate/SKILL.md` — auto list_screens check before user prompt
+3. ✅ **Model deprecation awareness**
+   - File: `.claude/skills/dg-generate/SKILL.md` — model selection step references known-state.json
 
 ### Phase 5: Remaining Lint Rules (P2 — detection gaps)
 **Research**: Already done (ws1-rules RESEARCH.md + dogfood automated tests)

@@ -71,7 +71,12 @@ Before sending any prompt to Stitch:
    ```
 
 4. **Generate the screen**:
-   - **IF generator is `stitch`**: Call `mcp__stitch__generate_screen_from_text` with the prompt. Include the Stitch project ID from `.guardrc.json`.
+   - **IF generator is `stitch`**:
+     - **Model selection**: Before generating, read `packages/cli/src/research/known-state.json` to check available models. Use ONLY non-deprecated models:
+       - **GEMINI_3_FLASH** (350/month quota) — default for fast iteration and standard screens
+       - **GEMINI_3_1_PRO** (200/month quota) — use for high-quality hero pages or when the user explicitly requests best quality
+       - Do NOT use GEMINI_3_PRO or GEMINI_2_5_FLASH — these are deprecated and may produce inferior results or fail
+     - Call `mcp__stitch__generate_screen_from_text` with the prompt, the selected model, and the Stitch project ID from `.guardrc.json`.
    - **IF generator is `claude`**: Generate a complete, single-file HTML page directly. Follow these constraints:
      - Apply ALL rules from `.claude/rules/anti-slop-design.md`
      - Apply ALL rules from `.claude/rules/design-system-adherence.md`
@@ -101,7 +106,18 @@ Before sending any prompt to Stitch:
    - [Detail 2]
    ```
 
-9. If generating multiple screens for a project, prefix subsequent prompts with:
+9. **Multi-screen requests — SEQUENTIAL ONLY**:
+   When the user asks to generate multiple screens (e.g., "create a landing page, about page, and pricing page"), generate them **ONE AT A TIME**. Follow this sequence for each screen:
+   1. Build the prompt for screen N
+   2. Generate screen N (Stitch or Claude)
+   3. Save to `screens/`
+   4. Run the critic on screen N
+   5. Fix any issues the critic flags
+   6. **Wait for the full cycle to complete** before starting screen N+1
+
+   **NEVER send multiple generation requests in parallel** — this causes cascading timeouts on Stitch and wastes quota when screens fail. If Stitch is already timing out on one request, sending more will make it worse.
+
+   For subsequent screens, prefix prompts with:
    "Following the same design language as the homepage..."
 
 10. For **variants**, offer to call `mcp__stitch__generate_variants` to produce 2-3 alternative designs the user can compare before committing to one direction.
@@ -121,15 +137,15 @@ Before sending any prompt to Stitch:
 IF a Stitch MCP call (`mcp__stitch__generate_screen_from_text`) times out, hangs, or returns an error:
 
 1. **Do NOT silently switch to Claude Code generation.** The user chose Stitch and must be informed.
-2. Tell the user exactly what happened: "Stitch MCP timed out while generating [screen name]. The screen may have been created server-side even though the response didn't come back."
-3. **Suggest sync first**: "I recommend running `/dg-sync` to check if the screen was completed on Stitch's end. Want me to do that?"
-4. IF the user agrees to sync:
-   - Run `/dg-sync` (call `mcp__stitch__list_screens` to check for the screen).
-   - IF the screen is found server-side: download it, save to `screens/`, and tell the user: "Found the screen on Stitch! Downloaded to screens/[name].html."  Done -- do NOT generate again.
-   - IF the screen is NOT found: tell the user: "Stitch did not complete this screen."
-5. **Only then offer fallback**: "Would you like me to generate this screen locally with Claude Code instead? (Anti-slop rules will be enforced.)"
-6. Generate locally with Claude Code ONLY if the user explicitly agrees.
-7. **NEVER**:
+2. **Auto-check if the screen completed server-side**: Stitch often completes generation even when the MCP response times out. Immediately call `mcp__stitch__list_screens` to check if the screen was created despite the timeout.
+   - **IF the screen IS found**: download it via `mcp__stitch__get_screen` and `get_screen_code`, save to `screens/`, and tell the user: "Stitch timed out but the screen completed server-side. Downloaded to screens/[name].html." Proceed to the critic step as normal.
+   - **IF the screen is NOT found**: continue to step 3.
+3. Tell the user exactly what happened: "Stitch MCP timed out while generating [screen name] and the screen was not completed server-side."
+4. **Offer options** (do NOT pick one silently):
+   - "Would you like me to generate this screen locally with Claude Code instead? (Anti-slop rules will be enforced during generation.)"
+   - "Or run `/dg-sync` later to check again if it appears."
+5. Generate locally with Claude Code ONLY if the user explicitly agrees.
+6. **NEVER**:
    - Retry the Stitch call (the timeout suggests a server-side issue)
    - Send parallel requests to Stitch
    - Generate locally without asking
